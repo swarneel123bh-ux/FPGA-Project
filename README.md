@@ -7,6 +7,8 @@ EEE F314 FPGA-Based System Design, BITS Pilani Hyderabad — Group 16, section P
 2. **Compressed-audio enhancement:** a low-bitrate MP3 sent over the USB-UART is decoded on the
    ARM and streamed to the PL, which regenerates the treble the encoder removed.
 
+**Plan, schedule and who does what: [docs/plan/](docs/plan/README.md).**
+
 ## Layout
 
 | Folder | Contents |
