@@ -1,0 +1,47 @@
+# ---- Personal notes (not part of the repo) ----
+HANDOFF.md
+HANDOFF_*.md
+*.patch
+
+# ---- Simulation outputs ----
+*.vcd
+*.fst
+*.vvp
+a.out
+xsim.dir/
+*.wdb
+*.jou
+*.log
+*.pb
+
+# ---- Vivado / Vitis generated ----
+.Xil/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+*.gen/
+*.srcs/
+*.xpr
+*.bit
+*.ltx
+vivado*.str
+sw/**/_ide/
+sw/**/Debug/
+sw/**/Release/
+sw/.metadata/
+sw/RemoteSystemsTempFiles/
+
+# ---- Python ----
+__pycache__/
+.venv/
+*.wav
+*.mp3
+
+# ---- Editor / OS junk ----
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
