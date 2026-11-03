@@ -2,6 +2,7 @@
 HANDOFF.md
 HANDOFF_*.md
 *.patch
+build/
 
 # ---- Simulation outputs ----
 *.vcd
