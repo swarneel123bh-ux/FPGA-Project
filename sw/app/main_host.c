@@ -11,6 +11,11 @@
 
 #define MP3_LEN 140627
 
+#ifdef BOARD
+	static uint8_t *RecvBuffer = (uint8_t*)0x10000000;
+#else
+#endif
+
 // Macos_main
 int main(int argc, char **argv) {
 
