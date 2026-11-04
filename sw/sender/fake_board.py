@@ -92,12 +92,20 @@ def main():
                     f.write(payload)
                 out = subprocess.run([args.decoder, mp3, os.path.join(d, "rx.raw")],
                                      capture_output=True, text=True)
+            res = {}
             for line in out.stdout.splitlines():
                 if line.startswith("res."):
                     say(ser, line)
+                    key, _, val = line.partition(" = ")
+                    res[key] = val
             if out.returncode != 0:
                 say(ser, "[FAIL] decode() returned SIG_DECODE_FAIL")
                 return 4
+            # same rule as main_host.c: the PL plays 48 kHz mono only
+            rate, ch = res.get("res.sample_rate"), res.get("res.channel_count")
+            if rate != "48000" or ch != "1":
+                say(ser, "[FAIL] need 48 kHz mono, got %s Hz %s ch (send with --to48k)" % (rate, ch))
+                return 9
         else:
             say(ser, "res.checksum = 0x00000000 (no --decoder given)")
         say(ser, "decode 0 ms for 0 ms of audio (x0 real time)")

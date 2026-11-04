@@ -23,6 +23,7 @@
 #define ERR_BAD_HEADER           6
 #define ERR_RX_TIMEOUT           7
 #define ERR_CHECKSUM_MISMATCH    8
+#define ERR_BAD_FORMAT           9
 
 /*
 	Frame sent by the laptop sender (sw/sender/ must match this byte for byte):
@@ -213,6 +214,15 @@ int main(int argc, char **argv) {
 	xil_printf("res.sample_rate = %d\r\n",         (int)res.sample_rate);
 	xil_printf("res.samples_per_channel = %d\r\n", (int)res.samples_per_channel);
 	xil_printf("res.checksum = 0x%08x\r\n",        res.checksum);
+
+	// The PL plays 48 kHz mono only (no resampler or downmix on the ARM): reject anything else.
+	// Printed before the "real time" line, because the sender stops reading at that line.
+	if (res.sample_rate != 48000 || res.channel_count != 1) {
+		xil_printf("[FAIL] need 48 kHz mono, got %d Hz %d ch (send with --to48k)\r\n",
+			(int)res.sample_rate, (int)res.channel_count);
+		return ERR_BAD_FORMAT;
+	}
+
 	xil_printf("decode %d ms for %d ms of audio (x%d real time)\r\n",
 		(int)decode_ms, (int)audio_ms, decode_ms ? (int)(audio_ms / decode_ms) : 0);
 #else
