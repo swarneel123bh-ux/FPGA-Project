@@ -17,7 +17,7 @@ typedef struct DecodeResult_t {
 
 int decode(
 	const uint8_t *mp3, size_t mp3_len,
-  int16_t *pcm, size_t pcm_cap,      	/* caller's buffer, in 16-bit signed integer PCM values */
-  DecodeResult_t *res);        				/* returns OK or FAIL if pcm is too small */
+	int16_t *pcm, size_t pcm_cap, /* caller's buffer, in 16-bit signed integer PCM values */
+	DecodeResult_t *res); /* returns OK or FAIL if pcm is too small */
 
 #endif // DECODE_H

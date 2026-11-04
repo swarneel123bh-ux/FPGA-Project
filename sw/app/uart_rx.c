@@ -8,30 +8,44 @@
 #include "xil_exception.h"
 #include "xil_printf.h"
 
-#ifdef XPAR_INTC_0_DEVICE_ID
-	#include "xintc.h"
+/*
+ * Two driver flows [SDT branch added by Claude]:
+ *   Vitis 2020.x (lab)  - classic flow, devices looked up by DEVICE_ID, GIC set up by hand.
+ *   Vitis 2023.2+       - SDT flow (SDT defined by the BSP), devices looked up by base
+ *                         address, GIC set up by XSetupInterruptSystem().
+ */
+#ifdef SDT
+	#include "xinterrupt_wrap.h"
+	#define UART_BASEADDR    XPAR_XUARTPS_0_BASEADDR
 #else
-	#include "xscugic.h"
-#endif
+	#ifdef XPAR_INTC_0_DEVICE_ID
+		#include "xintc.h"
+	#else
+		#include "xscugic.h"
+	#endif
 
-#define INTC             XScuGic
-#define UART_DEVICE_ID   XPAR_XUARTPS_0_DEVICE_ID
-#define INTC_DEVICE_ID   XPAR_SCUGIC_SINGLE_DEVICE_ID
-#define UART_INT_IRQ_ID  XPAR_XUARTPS_1_INTR
+	#define INTC             XScuGic
+	#define UART_DEVICE_ID   XPAR_XUARTPS_0_DEVICE_ID
+	#define INTC_DEVICE_ID   XPAR_SCUGIC_SINGLE_DEVICE_ID
+	#define UART_INT_IRQ_ID  XPAR_XUARTPS_1_INTR
+#endif
 
 
 static volatile u32 TotalReceivedCount;
 static volatile u32 TotalErrorCount;
+static volatile int rx_done = 0;
 
 static void Handler(void *CallBackRef, u32 Event, u32 EventData);
 
 static XUartPs uart;
+static XUartPs *UartInstancePtr = &uart;
+#ifndef SDT
 static XScuGic gic;
 static INTC *IntcInstancePtr = &gic;
-static XUartPs *UartInstancePtr = &uart;
 static XScuGic_Config *IntcConfig;
-u16 DeviceId = UART_DEVICE_ID;
-u16 UartIntrId = UART_INT_IRQ_ID;
+static u16 DeviceId = UART_DEVICE_ID;
+static u16 UartIntrId = UART_INT_IRQ_ID;
+#endif
 
 int uart_rx_init(void) {
 	int Status;
@@ -42,7 +56,11 @@ int uart_rx_init(void) {
 	 * Initialize the UART driver so that it's ready to use
 	 * Look up the configuration in the config table, then initialize it.
 	 */
+#ifdef SDT
+	Config = XUartPs_LookupConfig(UART_BASEADDR);
+#else
 	Config = XUartPs_LookupConfig(DeviceId);
+#endif
 	if (NULL == Config) { return XST_FAILURE; }
 
 	Status = XUartPs_CfgInitialize(UartInstancePtr, Config, Config->BaseAddress);
@@ -50,19 +68,27 @@ int uart_rx_init(void) {
 
 	// Set Baud Rate and Fifo Thresholds
 	if (XUartPs_SetBaudRate(UartInstancePtr, 230400) != XST_SUCCESS) { return XST_FAILURE; }
-  XUartPs_SetFifoThreshold(UartInstancePtr, 32);
+	XUartPs_SetFifoThreshold(UartInstancePtr, 32);
 
-  XUartPs_SetRecvTimeout(UartInstancePtr, 8);
+	XUartPs_SetRecvTimeout(UartInstancePtr, 8);
 
-  XUartPs_SetHandler(UartInstancePtr, (XUartPs_Handler)Handler, UartInstancePtr);
+	XUartPs_SetHandler(UartInstancePtr, (XUartPs_Handler)Handler, UartInstancePtr);
 
-  IntrMask =
+	IntrMask =
 		XUARTPS_IXR_TOUT | XUARTPS_IXR_PARITY | XUARTPS_IXR_FRAMING |
 		XUARTPS_IXR_OVER | XUARTPS_IXR_RXFULL |
 		XUARTPS_IXR_RXOVR;
-  XUartPs_SetInterruptMask(UartInstancePtr, IntrMask);
+	XUartPs_SetInterruptMask(UartInstancePtr, IntrMask);
 
 
+#ifdef SDT
+	/* Connect the UART interrupt through the GIC described in the device tree */
+	Status = XSetupInterruptSystem(
+		UartInstancePtr, &XUartPs_InterruptHandler,
+		Config->IntrId, Config->IntrParent,
+		XINTERRUPT_DEFAULT_PRIORITY
+	); if (Status != XST_SUCCESS) { return XST_FAILURE; }
+#else
 	/* Initialize the interrupt controller driver */
 	IntcConfig = XScuGic_LookupConfig(INTC_DEVICE_ID);
 	if (NULL == IntcConfig) { return XST_FAILURE; }
@@ -86,11 +112,11 @@ int uart_rx_init(void) {
 
 	XScuGic_Enable(IntcInstancePtr, UartIntrId);
 	Xil_ExceptionEnable();
+#endif
 
 	return XST_SUCCESS;
 }
 
-static volatile int rx_done = 0;
 static void Handler(void *CallBackRef, u32 Event, u32 EventData) {
 
 	/* All of the data has been received */
@@ -121,3 +147,7 @@ void uart_rx_start(u8 *buf, u32 n) {
 }
 
 int uart_rx_done(void) { return rx_done; }
+
+/* Bytes received so far and RX error events since the last uart_rx_start(). [added by Claude] */
+u32 uart_rx_count(void) { return TotalReceivedCount; }
+u32 uart_rx_errors(void) { return TotalErrorCount; }
