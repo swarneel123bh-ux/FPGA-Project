@@ -1,0 +1,20 @@
+{
+  "seed_hex": "0x5A5A5A",
+  "lfsr_taps": "state[22] XOR state[17]",
+  "probe_peak_real": 0.25,
+  "probe_raw_q1_23": 2097152,
+  "calibration_samples": 8000,
+  "model_length_M": 128,
+  "mu_s": 0.015625,
+  "sample_format": "signed 24-bit Q1.23",
+  "coefficient_format": "signed 24-bit Q2.22",
+  "true_nonzero_secondary_taps": {
+    "S[2]": 0.7,
+    "S[3]": 0.2
+  },
+  "estimated_S2": 0.699765682220459,
+  "estimated_S3": 0.1999342441558838,
+  "coefficient_error_norm": 0.000323642748984688,
+  "sample_count": 8000,
+  "expected_id_cycles_per_sample": 256
+}
