@@ -1,0 +1,25 @@
+{
+  "samples": 4096,
+  "sample_rate_hz": 48000,
+  "L": 64,
+  "M": 128,
+  "mu": 0.0078125,
+  "mu_shift": 7,
+  "mu_s": 0.015625,
+  "mu_s_shift": 6,
+  "sample_format": "signed 24-bit Q1.23",
+  "shat_format": "signed 24-bit Q2.22",
+  "weight_format": "signed 32-bit Q4.28",
+  "rounding": "nearest, ties away from zero",
+  "narrowing": "saturate",
+  "weight_limit_real": 1.5,
+  "error_power_limit_q46": 17592186044416,
+  "fixed_model_attenuation_after_settling_db": 37.53213952279599,
+  "files": [
+    "fxlms_xref.hex",
+    "fxlms_eerr.hex",
+    "fxlms_yanti.hex",
+    "fxlms_shat.hex",
+    "fxlms_w_over.hex"
+  ]
+}
