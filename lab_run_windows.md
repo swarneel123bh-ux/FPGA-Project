@@ -1,7 +1,12 @@
 # Lab run on Windows: send an MP3 to the ZedBoard and decode it
 
-*Written by Claude as a lab guide (not graded team code). For the lab's Windows PCs with
-Vivado/Vitis 2020.2. Assumes you have never used the ZedBoard, Vitis or this repository.*
+*Written by Claude as a lab guide (not graded team code). Assumes you have never used the
+ZedBoard, Vitis or this repository.*
+
+> **The lab PCs have no Vitis IDE** (only Vitis HLS, which cannot build ARM programs). Use the
+> **SD-card route in section 10** instead of sections 6 and 7: the program is built beforehand on
+> a machine that has Vitis and carried to the lab on an SD card. Sections 6 and 7 still apply on
+> a PC that does have Vitis 2020.x.
 
 ---
 
@@ -369,3 +374,79 @@ Read the **first** error message; later ones are often caused by it.
 | Build error `BOARD` code missing / errors about `fopen` or `argv` | `BOARD` symbol not set | Section 6.4 |
 | Build error `xil_printf.h: No such file` | Project was not made from `zed.xsa` with standalone | Redo section 6.2 |
 | Build error `undefined reference to` a maths function (`sqrt`, `pow`, ...) | Maths library not linked | Properties → C/C++ Build → Settings → ARM v7 gcc linker → Libraries → **+** → `m` |
+
+---
+
+## 10. SD-card route: no Vitis on the lab PC
+
+The board can start our program by itself from an SD card. The lab PC then needs only Python
+and `send_mp3.py`; no Xilinx software at all. This replaces sections 6 and 7.
+
+### 10.1 Before the lab: build `BOOT.BIN` (on the machine that has Vitis 2020.x)
+
+`BOOT.BIN` holds two programs: Xilinx's boot loader (FSBL), which sets up the processor and
+memory, and our `goal2_app`. The script `sw/xsct/build_boot.tcl` makes it with XSCT, Vitis's
+command-line tool, doing everything section 6 does in the IDE (BOARD symbol, maths library,
+64 KB stack), plus the boot loader.
+
+1. Get the latest **main** branch.
+2. In a terminal at the repository root (Windows: the **Vitis 2020.x XSCT** Start-menu entry, or
+   `C:\Xilinx\Vitis\2020.x\bin\xsct.bat`, after `cd` to the repository):
+   ```
+   xsct sw/xsct/build_boot.tcl
+   ```
+   It takes a few minutes and ends with `[build_boot] done:` and the path of
+   `build/sd/BOOT.BIN`.
+3. Format an SD card as **FAT32** (32 GB or smaller is safest) and copy `build/sd/BOOT.BIN` to
+   its top level. The name must stay exactly `BOOT.BIN`. Nothing else is needed on the card.
+4. Optional check before the lab, with the board on the JTAG jumpers (section 4.2): start
+   `send_mp3.py` (7.1), then run `xsct sw/xsct/run_jtag.tcl`. It does what "Launch Hardware"
+   does.
+
+Rebuild and recopy `BOOT.BIN` whenever the code in `sw/app` changes.
+
+### 10.2 In the lab: set the board up for SD boot
+
+With the power **off**:
+
+| Jumper | Set to |
+|---|---|
+| JP7  | GND |
+| JP8  | GND |
+| JP9  | **3V3** |
+| JP10 | **3V3** |
+| JP11 | GND |
+| JP6  | cap on (shorted) |
+
+1. Push the SD card into the SD slot (**J12**, on the underside of the board) until it clicks.
+2. Plug the power adapter into **J20**, and **only cable 2** into **J14 (UART)**. J17 is not
+   needed.
+3. Switch **SW8** on. LD13 (green) lights. The blue DONE LED stays off, which is normal: there is
+   no FPGA design yet.
+4. Find the COM port as in section 5.
+
+The board has already started the program and is waiting for a song. It gives up after a while,
+which does not matter: the next step restarts it.
+
+### 10.3 Run the test
+
+1. Start the sender (replace `COM5` with your number):
+   ```
+   py sw\sender\send_mp3.py COM5 test_audio\beethoven5_20s_48k_mono_56k.mp3
+   ```
+2. Within 60 seconds, press the **PS-RST** button on the board (one of the two buttons labelled
+   PROG and PS-RST; **not** PROG). The board restarts from the SD card, prints `**Ready**`, and
+   the sender sends the file.
+3. Check the output as in sections 7.3 and 8.
+
+To run again: start the sender, press PS-RST. Never press PS-RST while the sender is not
+running, or the board's `**Ready**` is missed (harmless: just start the sender and press again).
+
+### 10.4 If something goes wrong
+
+| What you see | Likely cause | Fix |
+|---|---|---|
+| `Hang: Never got **Ready**` | The board did not start from the SD card | Check the jumper table in 10.2 (JP9, JP10 on 3V3; JP6 on); check the card is FAT32 and the file is called `BOOT.BIN` at the top level; switch SW8 off and on, then repeat 10.3 |
+| Garbage characters before `**Ready**` | The boot loader printing at a different speed | Harmless, ignore |
+| Output stops after the `rx:` line | Stack too small | `BOOT.BIN` is from an old build: rebuild with `build_boot.tcl` (it sets the stack) |
+| `build_boot.tcl` stops with `ERROR: ...` | See the message | `no hardware file`: pass the path of `zed.xsa` as an argument. `could not find the 0x2000 stack size`: set it by hand in `build/vitis_ws/goal2_app/src/lscript.ld` and run `app build` |
