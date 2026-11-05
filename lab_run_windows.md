@@ -3,10 +3,11 @@
 *Written by Claude as a lab guide (not graded team code). Assumes you have never used the
 ZedBoard, Vitis or this repository.*
 
-> **The lab PCs have no Vitis IDE** (only Vitis HLS, which cannot build ARM programs). Use the
-> **SD-card route in section 10** instead of sections 6 and 7: the program is built beforehand on
-> a machine that has Vitis and carried to the lab on an SD card. Sections 6 and 7 still apply on
-> a PC that does have Vitis 2020.x.
+> **The lab PCs have no Vitis IDE** (only Vitis HLS, which cannot build ARM programs, and
+> Vivado 2020.1). The program is built beforehand on a machine that has Vitis (section 10.1) and
+> the board starts it by itself, either from the **QSPI flash chip on the board, written with the
+> lab's Vivado (section 11, no SD card needed)**, or from an SD card (section 10). These replace
+> sections 6 and 7, which still apply on a PC that does have Vitis 2020.x.
 
 ---
 
@@ -450,3 +451,67 @@ running, or the board's `**Ready**` is missed (harmless: just start the sender a
 | Garbage characters before `**Ready**` | The boot loader printing at a different speed | Harmless, ignore |
 | Output stops after the `rx:` line | Stack too small | `BOOT.BIN` is from an old build: rebuild with `build_boot.tcl` (it sets the stack) |
 | `build_boot.tcl` stops with `ERROR: ...` | See the message | `no hardware file`: pass the path of `zed.xsa` as an argument. `could not find the 0x2000 stack size`: set it by hand in `build/vitis_ws/goal2_app/src/lscript.ld` and run `app build` |
+
+---
+
+## 11. QSPI-flash route: no Vitis and no SD card
+
+The ZedBoard has a 32 MB flash chip (QSPI) that it can start from, like an SD card. The lab's
+**Vivado 2020.1** can write `BOOT.BIN` into it over the JTAG cable. The flash keeps its contents
+when the power is off, so this is needed once per code change, not once per run.
+
+### 11.1 Before the lab
+
+1. Build as in 10.1, steps 1-2.
+2. Copy **three** files to a USB stick (or any drive the lab PC can reach):
+   `build/sd/BOOT.BIN`, `build/sd/fsbl.elf` and `sw/xsct/program_qspi.tcl`.
+   Vivado needs `fsbl.elf` (the boot loader) to reach the flash chip.
+
+### 11.2 In the lab: write the flash (once per code change)
+
+1. Board **off**, jumpers on **JTAG** (all five on GND, section 4.2). Xilinx's tools write the
+   flash most reliably in JTAG mode.
+2. Plug in **J20** (power), **J17 (PROG)** and **J14 (UART)**. Switch **SW8** on.
+3. Copy the three files from the USB stick into one folder, e.g. `C:\work\qspi`. Open Command
+   Prompt there (section 3.2) and run:
+   ```
+   C:\Xilinx\Vivado\2020.1\bin\vivado.bat -mode batch -source program_qspi.tcl -tclargs BOOT.BIN fsbl.elf
+   ```
+   It connects, erases, programs and verifies, and ends with `[program_qspi] done.` It takes
+   about a minute.
+
+**Same thing in the Vivado window** (if the script fails, or to see what it does): Vivado 2020.1
+→ **Open Hardware Manager** → **Open Target → Auto Connect** → right-click **xc7z020_1** →
+**Add Configuration Memory Device** → search `s25fl256s`, pick **s25fl256s-3.3v-qspi-x4-single**
+→ **OK**, and say **Yes** to programming it now → **Configuration file**: `BOOT.BIN`,
+**Zynq FSBL**: `fsbl.elf` → tick **Erase**, **Program**, **Verify** → **OK**.
+
+### 11.3 Switch to QSPI boot
+
+Board **off**, then:
+
+| Jumper | Set to |
+|---|---|
+| JP7  | GND |
+| JP8  | GND |
+| JP9  | GND |
+| JP10 | **3V3** |
+| JP11 | GND |
+
+J17 can stay plugged in; it is not used. Switch **SW8** on.
+
+### 11.4 Run the test
+
+Exactly as in 10.3: start the sender, then press **PS-RST** within 60 seconds.
+
+To change the program later: rebuild (10.1), then repeat 11.2 (jumpers back on JTAG first) and
+11.3.
+
+### 11.5 If something goes wrong
+
+| What you see | Likely cause | Fix |
+|---|---|---|
+| `no xc7z020 on the JTAG chain` | J17 cable, power, or the JTAG cable driver | Check J17 and LD13; power-cycle. If Vivado's Hardware Manager also finds nothing, ask the lab staff about the Xilinx cable drivers |
+| Flash initialisation / "flash ID" error while programming | Board not in JTAG mode, or the wrong flash part | Set all five jumpers to GND, power-cycle, retry. In the Vivado window, try the other S25FL256S entries (e.g. `x1-single`) |
+| Programming and verify pass, but `Hang: Never got **Ready**` | Board not set to QSPI boot | Check the 11.3 table (only JP10 on 3V3); power-cycle; repeat 11.4 |
+| `Vivado does not know flash part` | Different Vivado version | Use the Vivado window and pick the closest S25FL256S 3.3 V entry |

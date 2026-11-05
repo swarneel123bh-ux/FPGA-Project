@@ -112,5 +112,6 @@ puts $msg
 cd $here
 
 puts "\[build_boot\] done:"
-puts "  [file join $out BOOT.BIN]   (copy to the SD card)"
+puts "  [file join $out BOOT.BIN]   (copy to the SD card, or program_qspi.tcl)"
+puts "  [file join $out fsbl.elf]   (program_qspi.tcl needs it too)"
 puts "  [file join $out goal2_app.elf]   (for run_jtag.tcl)"
