@@ -2,6 +2,7 @@
 HANDOFF.md
 HANDOFF_*.md
 *.patch
+build/
 
 # ---- Simulation outputs ----
 *.vcd
@@ -45,3 +46,6 @@ __pycache__/
 .idea/
 *.swp
 *~
+
+# Vitis workspace metadata (created when Vitis opens this folder)
+_ide/
