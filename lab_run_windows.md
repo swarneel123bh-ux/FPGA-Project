@@ -49,10 +49,39 @@ jobs and never share a connection:
 
 ---
 
-## 2. Before the lab, on your own laptop (Mac or Linux)
+## 2. The test file and its reference numbers
 
-The lab PCs have no C compiler, so the reference numbers must be made beforehand. You need the
-repository (main branch), Python 3 and a C compiler (Mac: `xcode-select --install`;
+**Nothing to prepare for the standard test.** The repository already contains a ready test file,
+`test_audio\beethoven5_20s_48k_mono_56k.mp3` (20 s of Beethoven, public domain, 48 kHz mono,
+140,516 bytes). Its reference numbers, measured on a laptop with the PC version of the decoder,
+are:
+
+| Line the board prints | Expected value for this file |
+|---|---|
+| `fnv1a` / `fnv` (file fingerprint) | `0x6bbdb72d` |
+| `res.channel_count` | `1` |
+| `res.frame_count` | `836` |
+| `res.sample_rate` | `48000` |
+| `res.samples_per_channel` | `963072` |
+| `res.checksum` (audio fingerprint) | `0xb5f37fd1` |
+
+What each line means:
+
+| Line | Meaning | Proves |
+|---|---|---|
+| `fnv1a` / `fnv` | Fingerprint of the **MP3 file's bytes**. The sender computes it before sending; the board recomputes it from what it received | The file arrived intact |
+| `res.channel_count` | 1 = mono, 2 = stereo | Right format |
+| `res.frame_count` | Number of MP3 frames (small chunks, 24 ms each at 48 kHz) | The whole file was decoded |
+| `res.sample_rate` | Samples per second | Right format |
+| `res.samples_per_channel` | Total audio samples decoded (963,072 ÷ 48,000 = 20.06 s) | The whole file was decoded |
+| `res.checksum` | Fingerprint of the **decoded audio** | The ARM decoded it exactly like the PC |
+
+A second file, `test_audio\beethoven5_20s_48k_mono_128k.mp3` (321,068 bytes), tests a
+higher bitrate; its numbers are in `test_audio\README.md`.
+
+The rest of this section is only for testing **your own** song. The lab PCs have no C compiler, so
+your song's reference numbers must be made on your laptop beforehand. You need the repository
+(main branch), Python 3 and a C compiler (Mac: `xcode-select --install`;
 Linux: `sudo apt install build-essential`).
 
 ### 2.1 Install the sender's Python packages
@@ -64,7 +93,7 @@ python3 -m pip install -r sw/sender/requirements.txt
 This installs `pyserial` (talks to COM ports) and `imageio-ffmpeg`, which includes its own copy of
 **ffmpeg** (an audio converter), so you do not need to install ffmpeg separately.
 
-### 2.2 Make the test file
+### 2.2 Make your test file
 
 The board accepts **only 48 kHz, mono** MP3 files. Any song works as a source (WAV, FLAC or MP3).
 Find the bundled ffmpeg and convert:
@@ -84,29 +113,9 @@ mkdir -p build
 gcc -O2 -o build/decode_pc sw/app/main_host.c sw/app/decode.c -lm
 build/decode_pc test_56k.mp3 build/test_56k.raw
 ```
-It prints six lines. A real run on a 20 s clip gave these; your values will differ unless you
-use the same song:
-```
-fnv1a(mp3) = 0x3048a002
-res.channel_count = 1
-res.frame_count = 836
-res.sample_rate = 48000
-res.samples_per_channel = 963072
-res.checksum = 0xd8f3c471
-```
-What each line means:
-
-| Line | Meaning | Must be |
-|---|---|---|
-| `fnv1a(mp3)` | Fingerprint of the **MP3 file's bytes**. The board recomputes it from the bytes it received. | Same on the board: proves the file arrived intact |
-| `res.channel_count` | 1 = mono, 2 = stereo | `1` |
-| `res.frame_count` | Number of MP3 frames (small chunks, about 24 ms each at 48 kHz) | Same on the board |
-| `res.sample_rate` | Samples per second | `48000` |
-| `res.samples_per_channel` | Total audio samples decoded | Same on the board |
-| `res.checksum` | Fingerprint of the **decoded audio** | Same on the board: proves the ARM decoded it identically |
-
-**Write all six numbers down** (there is a table in `lab_checklist_2026-11-05.md`), and copy
-`test_56k.mp3` to a USB stick.
+It prints the same six lines as the table above, with your song's values. **Write all six
+down**, and copy `test_56k.mp3` to a USB stick. In the commands below, use your file's name
+instead of the Beethoven file.
 
 ---
 
@@ -118,7 +127,8 @@ Open https://github.com/swarneel123bh-ux/FPGA-Project in a browser. Check the br
 **main**. Click the green **Code** button → **Download ZIP**. Unzip it to a short path, e.g.
 `C:\work\FPGA-Project`. (If git is installed, `git clone` works too.)
 
-Copy `test_56k.mp3` from your USB stick into that folder.
+The test file is already inside, in `test_audio`. (Testing your own song? Copy it from your USB
+stick into the same folder.)
 
 ### 3.2 Open Command Prompt in that folder
 
@@ -278,7 +288,7 @@ program starts. The sender must already be listening, so **start the sender firs
 
 In the Command Prompt from section 3.2 (replace `COM5` with your number from section 5):
 ```
-py sw\sender\send_mp3.py COM5 test_56k.mp3
+py sw\sender\send_mp3.py COM5 test_audio\beethoven5_20s_48k_mono_56k.mp3
 ```
 It now waits silently for up to **60 seconds**. Go straight to the next step.
 
@@ -295,17 +305,17 @@ shows progress; the board's own output appears in the **Command Prompt**, not in
 
 Within a few seconds it prints `sending ... bytes`, then (6 s for a 20 s clip) the board's report:
 ```
-sending 140666 bytes, fnv 0x3048a002
-rx: 140666 bytes, 0 uart errors, fnv 0x3048a002 (sender 0x3048a002)
+sending 140516 bytes, fnv 0x6bbdb72d
+rx: 140516 bytes, 0 uart errors, fnv 0x6bbdb72d (sender 0x6bbdb72d)
 res.channel_count = 1
 res.frame_count = 836
 res.sample_rate = 48000
 res.samples_per_channel = 963072
-res.checksum = 0xd8f3c471
+res.checksum = 0xb5f37fd1
 decode 1234 ms for 20064 ms of audio (x16 real time)
 ```
-(These are the example file's numbers from section 2.3; the timing on the last line is made up,
-because nobody has run it on the board yet. Yours must match **your** numbers from section 2.3.)
+All values except the last line are the expected ones for the Beethoven file (section 2). The
+timing on the last line is made up, because nobody has run it on the board yet.
 
 The last line says how fast the ARM decodes: `x16 real time` means 20 s of audio took 1.2 s.
 Anything above `x1` is fast enough to play live.
@@ -319,15 +329,15 @@ unless the code changed.
 
 ## 8. Pass or fail
 
-Compare with the numbers from section 2.3:
+Compare with the expected numbers in section 2 (or your own song's numbers from section 2.3):
 
 | Check | Pass |
 |---|---|
 | `uart errors` on the `rx:` line | `0` |
-| the two fnv values on the `rx:` line | equal to each other, and equal to your `fnv1a(mp3)` |
-| `res.frame_count`, `res.samples_per_channel` | equal to your numbers |
+| the two fnv values on the `rx:` line | equal to each other, and equal to the expected `fnv1a` (`0x6bbdb72d`) |
+| `res.frame_count`, `res.samples_per_channel` | `836`, `963072` |
 | `res.sample_rate` / `res.channel_count` | `48000` / `1` |
-| `res.checksum` | equal to your number |
+| `res.checksum` | `0xb5f37fd1` |
 | the last line | contains `real time` and no `[FAIL]` |
 
 If **everything matches except `res.checksum`**, the transfer is still proven correct. A tiny
@@ -354,7 +364,7 @@ Read the **first** error message; later ones are often caused by it.
 | `uart errors` above `0` | Bytes were lost or damaged in the receiver | Write down the number and the file size: that is a real bug to fix |
 | `[FAIL] checksum mismatch` | The file arrived damaged | Run again; if it repeats, report both fnv values |
 | `[FAIL] length ... out of range` | File too big (limit 2 MB) | Use a shorter clip (`-t 20` in section 2.2) |
-| `[FAIL] need 48 kHz mono` | Wrong test file | Use the file made in section 2.2. For a quick demo only, add `--to48k` to the sender command |
+| `[FAIL] need 48 kHz mono` | Wrong test file | Use a file from `test_audio`, or one made as in section 2.2. For a quick demo only, add `--to48k` to the sender command |
 | Output stops after the `rx:` line, nothing more | Stack too small: the decoder crashed | Section 6.5, then rebuild (6.6) and run again |
 | Build error `BOARD` code missing / errors about `fopen` or `argv` | `BOARD` symbol not set | Section 6.4 |
 | Build error `xil_printf.h: No such file` | Project was not made from `zed.xsa` with standalone | Redo section 6.2 |

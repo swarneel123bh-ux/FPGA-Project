@@ -49,3 +49,5 @@ __pycache__/
 
 # Vitis workspace metadata (created when Vitis opens this folder)
 _ide/
+# Test MP3s are tracked on purpose (small, public domain; see test_audio/README.md)
+!test_audio/*.mp3
