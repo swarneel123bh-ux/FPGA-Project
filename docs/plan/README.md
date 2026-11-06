@@ -12,9 +12,11 @@ Vivado 2020 / Vitis 2020.x.
 | C | Samarth Shreepad Dixit | LFSR, secondary-path identification, noise meter and OLED, divergence monitor, acoustic rig | [C-samarth-pathid-meter.md](C-samarth-pathid-meter.md) |
 | D | Swarneel Bhattacharjee | Goal 2: MP3 over UART, ARM decoding, PL FIFO, treble restoration | [D-swarneel-goal2.md](D-swarneel-goal2.md) |
 
-Status on 31 Oct 2026: **nothing built yet; the team starts today.** The schedule below is
-compressed from the submitted five-week plan. Role mapping follows the group-sheet order; tell
-Swarneel if it is wrong.
+Status on 6 Nov 2026: existing B, C and D work was validated on 5 Nov, including the goal-2 lab
+run. Aarav's week-1 codec/I2S scaffolding and supplied simulations were merged into `main` on
+6 Nov; Vivado generation and audio-path hardware validation remain pending. The schedule below
+is compressed from the submitted five-week plan. Role mapping follows the group-sheet order;
+tell Swarneel if it is wrong.
 
 ---
 

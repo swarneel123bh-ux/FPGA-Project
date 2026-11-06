@@ -13,6 +13,9 @@ MP3 into raw audio samples ("decoding"), and prints a short report back to the P
 comes out yet**; that needs the codec code another team member is writing. Success means the
 report shows zero lost bytes and the same numbers the PC got for the same file.
 
+**Lab status (5 Nov 2026):** this goal-2 receive/decode test passed. The codec/audio-output path
+was not part of that validation.
+
 ### Words used below
 
 | Word | Meaning here |
@@ -315,7 +318,7 @@ res.checksum = 0xb5f37fd1
 decode 1234 ms for 20064 ms of audio (x16 real time)
 ```
 All values except the last line are the expected ones for the Beethoven file (section 2). The
-timing on the last line is made up, because nobody has run it on the board yet.
+timing on the last line varies by board; record the observed value during a run.
 
 The last line says how fast the ARM decodes: `x16 real time` means 20 s of audio took 1.2 s.
 Anything above `x1` is fast enough to play live.

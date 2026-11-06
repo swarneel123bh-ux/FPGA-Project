@@ -6,6 +6,10 @@ Read [README.md](README.md) first (goals, schedule, interface table §5, agent r
 out, nobody can test on hardware. You also own the top level and the `.xdc`, so you are the
 integrator in week 2.
 
+**Status (6 Nov):** `codec_cfg`, `i2s_rx`, `i2s_tx`, the temporary passthrough top, a week-1
+constraint scaffold and their supplied simulations are merged into `main`. Vivado project
+generation, hardware validation, the mode FSM, output mux and final integration remain pending.
+
 ## Your modules
 
 | File | Module | Function |
