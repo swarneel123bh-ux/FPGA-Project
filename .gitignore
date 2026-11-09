@@ -51,3 +51,4 @@ __pycache__/
 _ide/
 # Test MP3s are tracked on purpose (small, public domain; see test_audio/README.md)
 !test_audio/*.mp3
+!test_audio/ABXtesting/*.mp3

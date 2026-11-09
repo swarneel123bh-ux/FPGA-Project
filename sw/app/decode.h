@@ -10,6 +10,7 @@ typedef struct DecodeResult_t {
 	size_t samples_per_channel;
 	size_t sample_rate;
 	size_t channel_count;
+	size_t bitrate;
 } DecodeResult_t;
 
 #define SIG_DECODE_OK		0

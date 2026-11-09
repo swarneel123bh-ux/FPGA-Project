@@ -5,30 +5,21 @@ Read [README.md](README.md) first (goals, schedule, interface table §5, agent r
 **Your role:** goal 2 is best-effort; goal 1 comes first for the team. Your path is independent
 of ANC until week 2, when it plugs into A's output mux as `music` (MUSIC state).
 
-## What's next (updated 9 Nov; feature freeze Thu 12 Nov)
+## Status and next steps (updated 9 Nov 2026)
 
-Done: UART → DDR → MP3 decode → PL FIFO, validated on the board on 5 Nov. `music_fifo.v` and
-`music_fifo_axi.v` pass their testbenches (9 Nov).
+Done:
+- Decoder reports the bitrate (`res.bitrate`, read on every frame; the 32k file reads 32).
+- Cutoff measured for 32–96 kbit/s on the Beethoven clip (40 dB rule): see
+  `test_audio/beethoven5_ogg_knee_table.md`. 32 kbit/s: 7.2 kHz.
+- `model/goal2/ref.py`: float reference model (band-pass fc/2–fc, |x|, high-pass fc, low-pass 20 kHz,
+  add with gain 1). Runs on the 32k decode with no clipping.
+- ABX set: `test_audio/ABXtesting/` (16 passages, plain vs enhanced, `abx.py`). Not yet run.
 
-1. **Treble stage 1, fixed rule (the main open item).** Nothing exists yet: no
-   `model/goal2/`, `rtl/treble_fixed.v` or `sim/tb_treble_fixed.v`. In order:
-   - Fixed-point Python model in `model/goal2/`: cutoff fc, top octave below fc, harmonics
-     (rectifier), envelope-shaped noise above fc, high-pass at fc, fixed gain, limit to 20 kHz.
-     Write down the word lengths.
-   - Vectors to `sim/vectors/`, then `rtl/treble_fixed.v` bit-exact against the model, with its
-     testbench.
-   - Target: model and RTL both done by Wed 11 Nov, so the 12 Nov freeze holds.
-2. **Interface with A.** `music` (s24) goes into A's `out_mux` in the MUSIC state. A has not yet
-   pushed `mode_fsm.v`, `out_mux.v` or `top.v`, so agree the §5 widths with A now.
-3. **FIFO underrun.** Check that `fifo_underrun` reaches A's `mode_fsm` and zeroes the output when
-   integrated.
-4. **A/B switch (plain vs enhanced, live).** Depends on A's mode switch logic; wire it after
-   step 2.
-5. **Record the 5 Nov lab numbers** (FNV match, `res.checksum`, real-time factor, transfer time)
-   from `lab_checklist_2026-11-05.md` into `HANDOFF.md`, as a patch through `handoff_mgr.py`.
-6. **Report (13–14 Nov).** Goal-2 sections: data path, link budget, decoder choice, measured
-   results. Claim only log-spectral distance against the master above the cutoff and a blind
-   listening test.
+Next:
+1. Hardware session on Wednesday 11 Nov: `docs/hardware_testing_plan.md`, starting with T0.
+2. Run the ABX test when a good headset is available.
+3. Make the model fixed point (word lengths, rounding, saturation) and write its testbench.
+4. Decide the RTL only if the ABX result or the measurements show a gain.
 
 ## Data path
 
@@ -37,7 +28,7 @@ Laptop: MP3 file (bytes unchanged)
   │ PS USB-UART, 230,400 baud (CY7C64225 → PS UART1, MIO 48/49, no RTS/CTS)
   ▼
 ARM, bare-metal (Vitis 2020.x):
-  UART RX interrupt → DDR ring buffer → MP3 decoder → 44.1 → 48 kHz (open) → AXI → PL
+  UART RX interrupt → DDR ring buffer → MP3 decoder → AXI → PL   (48 kHz only; see Targets)
   ▼
 PL: music_fifo (drained at sample_tick) → treble_fixed → music → out_mux (A) → I2S → headphones
 ```
@@ -62,8 +53,8 @@ what the link can carry, and an A/B switch changes the sound live.
 
 1. **Choose the bare-metal MP3 decoder library** (must build in Vitis 2020.x without an OS).
    Web-verify licence, build and memory needs before choosing.
-2. **Decide 44.1 vs 48 kHz:** resample on the ARM to 48 kHz, or reconfigure the codec in music
-   mode. Resampling keeps the codec at 48 kHz everywhere (A's preference; ask).
+2. **Sample rate: decided (9 Nov).** Resampling is done on the laptop with ffmpeg, not on the
+   ARM. No ARM resampler is written. See Targets below.
 3. UART receive: interrupt-driven (or DMA) into a DDR ring buffer; the hardware RX FIFO is small,
    so polling will drop bytes. Check the UART FIFO size in the Zynq TRM.
 4. Laptop sender with framing; test zero byte loss over a whole file at 230,400 baud (checksum
@@ -88,6 +79,20 @@ Smart guess (stage 2): per 5 ms frame, measure the level slope of 4 bands just b
 continue it into 8 bands above the cutoff plus 8 learned offsets, copy texture up from the octave
 below with an NCO, and gain each band to the predicted level. The float prototype beat the plain
 MP3 by a wide margin, but it is not team code and needs a fixed-point model first.
+
+## Targets (decided 9 Nov 2026)
+
+- **Primary: 32 kbit/s MP3 at 48 kHz mono.** The lowest rate the 48 kHz MPEG-1 Layer III format
+  allows. Cutoff is about 10 kHz (measured on the synthetic master and the OGG-derived Beethoven
+  clip). The octave-below-cutoff rule fits this case: the 2nd harmonic of 5–10 kHz lands at 10–20 kHz.
+- **Secondary: lower rates** (16–24 kbit/s, 24 kHz files resampled on the laptop). Cutoff drops to
+  about 5–6 kHz, so the enhancement must rebuild about 2 octaves. Only after the primary target works.
+- **Sample rate:** resampling is done on the laptop before sending, with
+  `ffmpeg -i master -ar 48000 -ac 1 -b:a 32k out.mp3` (one encode, from the master). The sender's
+  `--to48k` option re-encodes an existing MP3, which is a second lossy pass; use it for demos only.
+  The board accepts only 48 kHz mono; no resampler on the ARM.
+- **Claim:** the enhanced 32 kbit/s version is compared with the plain 32 kbit/s version. It is not
+  compared with 128 kbit/s as a target; 128 kbit/s is only the ceiling reference.
 
 ## Claims for the report
 

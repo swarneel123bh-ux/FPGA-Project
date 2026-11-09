@@ -214,6 +214,7 @@ int main(int argc, char **argv) {
 	xil_printf("res.sample_rate = %d\r\n",         (int)res.sample_rate);
 	xil_printf("res.samples_per_channel = %d\r\n", (int)res.samples_per_channel);
 	xil_printf("res.checksum = 0x%08x\r\n",        res.checksum);
+	xil_printf("res.bitrate = %d\r\n",         		 (int)res.bitrate);
 
 	// The PL plays 48 kHz mono only (no resampler or downmix on the ARM): reject anything else.
 	// Printed before the "real time" line, because the sender stops reading at that line.
@@ -231,6 +232,7 @@ int main(int argc, char **argv) {
 	printf("res.sample_rate = %lu\n",         (unsigned long)res.sample_rate);
 	printf("res.samples_per_channel = %lu\n", (unsigned long)res.samples_per_channel);
 	printf("res.checksum = 0x%08x\n",         res.checksum);
+	printf("res.bitrate = %lu\r\n",         		(unsigned long)res.bitrate);
 
 	// Write to the target file
 	char *target_filename = argv[2];

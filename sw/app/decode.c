@@ -19,6 +19,7 @@ int decode(
 	size_t used = 0;
 	size_t frames = 0;
 	size_t total = 0;
+	size_t bitrate = 0;
 	uint32_t hash = 2166136261u;
 	mp3dec_frame_info_t info;
 	int samples;
@@ -44,6 +45,10 @@ int decode(
 		pos += info.frame_bytes;	// Move the pointer by frame_bytes
 
 		if (!samples) continue; // Must be non-music data, continue
+
+		bitrate = info.bitrate_kbps; // We need to record this after every sample because for some reason
+		// there is another piece of samples recorded at 64 kbps so
+		// we need only the bitrate at the last sample
 
 		// Need to track since info will be wrong after break
 		if (frames == 0) {
@@ -73,5 +78,6 @@ int decode(
 	res->samples_per_channel = total;
 	res->sample_rate = hz;
 	res->channel_count = channels;
+	res->bitrate = bitrate;
 	return SIG_DECODE_OK;
 }
