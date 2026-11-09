@@ -7,6 +7,20 @@ rules §9).
 (filter lengths, step sizes, word lengths), and it is the reference that C's and your RTL are
 checked against bit for bit. The simulation marks mostly come from your convergence plot.
 
+## What's next (updated 9 Nov; freeze Thu 12 Nov)
+
+Done in sim (9 Nov): `tb_fxlms` passes bit-exact (4096 samples). `tb_anc_loop` passes against the
+Python model (4096 samples).
+
+1. **Confirm README §5/§6 numbers** (L, M, μ, μₛ, word lengths, `w_over` limit) match
+   `model/anc/fxlms.py` and `fixed.py`.
+2. **Hardware (week 2, with A and C):** replace the synthetic S with the path-ID result; tune μ;
+   update the model with A's measured latency.
+3. **Divergence:** check that `w_over` moves the FSM to MUTE before the output clips. This needs A's
+   `mode_fsm` and C's `divergence_mon.v`, neither in the repo yet.
+4. **Main result for the report:** convergence curve and steady-state attenuation in dB, from
+   `tb_anc_loop` / `sim_anc.py`.
+
 ## Your files
 
 | File | Function |

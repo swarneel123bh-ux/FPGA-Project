@@ -10,6 +10,24 @@ integrator in week 2.
 constraint scaffold and their supplied simulations are merged into `main`. Vivado project
 generation, hardware validation, the mode FSM, output mux and final integration remain pending.
 
+## What's next (updated 9 Nov; freeze Thu 12 Nov)
+
+Done in sim: `codec_cfg`, `i2s_rx`, `i2s_tx` pass their testbenches (9 Nov). `week1_passthrough_top.v`
+is in `rtl/`.
+
+1. **`rtl/mode_fsm.v` and `rtl/out_mux.v`** (not in the repo yet). Testbench walks every
+   transition in README §5 (CALIBRATE, CANCEL, BYPASS, MUTE, MUSIC). Calibration length is a
+   parameter. Target: passing testbench by Wed 11 Nov.
+2. **Vivado project from the current files** and the clocking IP for the codec master clock
+   (HANDOFF lists a 24 MHz clock; confirm against the ZedBoard schematic). Keep the rebuild Tcl script.
+3. **Hardware: codec passthrough.** Confirm I2C configuration, BCLK/LRCLK, then both mics to
+   headphones at the same time. The second-mic bias decision (due 3 Nov) is still open in HANDOFF.
+4. **`rtl/top.v`:** add C's `lfsr` and `sec_path_id`, then B's `fxlms`, then D's music path, one at a
+   time, testing on hardware after each. Switches: ANC on/off, mode select, recalibrate. LEDs: mode,
+   divergence, FIFO underrun.
+5. **ADC-to-DAC latency:** play a click, record it at the error mic, give the number to B.
+6. Report sections on the codec interface, FSM and integration (13–14 Nov).
+
 ## Your modules
 
 | File | Module | Function |

@@ -5,6 +5,31 @@ Read [README.md](README.md) first (goals, schedule, interface table §5, agent r
 **Your role:** goal 2 is best-effort; goal 1 comes first for the team. Your path is independent
 of ANC until week 2, when it plugs into A's output mux as `music` (MUSIC state).
 
+## What's next (updated 9 Nov; feature freeze Thu 12 Nov)
+
+Done: UART → DDR → MP3 decode → PL FIFO, validated on the board on 5 Nov. `music_fifo.v` and
+`music_fifo_axi.v` pass their testbenches (9 Nov).
+
+1. **Treble stage 1, fixed rule (the main open item).** Nothing exists yet: no
+   `model/goal2/`, `rtl/treble_fixed.v` or `sim/tb_treble_fixed.v`. In order:
+   - Fixed-point Python model in `model/goal2/`: cutoff fc, top octave below fc, harmonics
+     (rectifier), envelope-shaped noise above fc, high-pass at fc, fixed gain, limit to 20 kHz.
+     Write down the word lengths.
+   - Vectors to `sim/vectors/`, then `rtl/treble_fixed.v` bit-exact against the model, with its
+     testbench.
+   - Target: model and RTL both done by Wed 11 Nov, so the 12 Nov freeze holds.
+2. **Interface with A.** `music` (s24) goes into A's `out_mux` in the MUSIC state. A has not yet
+   pushed `mode_fsm.v`, `out_mux.v` or `top.v`, so agree the §5 widths with A now.
+3. **FIFO underrun.** Check that `fifo_underrun` reaches A's `mode_fsm` and zeroes the output when
+   integrated.
+4. **A/B switch (plain vs enhanced, live).** Depends on A's mode switch logic; wire it after
+   step 2.
+5. **Record the 5 Nov lab numbers** (FNV match, `res.checksum`, real-time factor, transfer time)
+   from `lab_checklist_2026-11-05.md` into `HANDOFF.md`, as a patch through `handoff_mgr.py`.
+6. **Report (13–14 Nov).** Goal-2 sections: data path, link budget, decoder choice, measured
+   results. Claim only log-spectral distance against the master above the cutoff and a blind
+   listening test.
+
 ## Data path
 
 ```

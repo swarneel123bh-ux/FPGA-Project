@@ -8,6 +8,21 @@ error mic → ADC). You learn that path at start-up by playing white noise and a
 also produce the number the demo is judged on: noise reduction in dB, on the OLED. And you
 build the physical test rig.
 
+## What's next (updated 9 Nov; freeze Thu 12 Nov)
+
+Done in sim (9 Nov): `lfsr`, `sec_path_id` (bit-exact), `power_meter`, `db_calc`, and
+`anc_measurement` (12.04 dB) all pass.
+
+1. **Missing files:** `model/anc/path_id.py` (golden model), `rtl/divergence_mon.v`,
+   `rtl/oled_display.v`. Target: the two RTL modules and their testbenches by Wed 11 Nov.
+2. **`divergence_mon`:** limits come from B's model (error power and `w_over`).
+3. **Hardware path ID with A:** read ŝ back (ILA, or UART dump with D's help). Check it looks like a
+   delayed impulse response. Tune calibration time and μₛ.
+4. **OLED:** show "ANC ON −xx dB" from `db_calc`. Check the dB maths against Python over a range of ratios.
+5. **Acoustic rig:** confirm it is built and fixed in place; photograph it for the report.
+6. **Measurement procedure:** tone on, ANC off then on for N seconds each, at 100, 200, 300 and 500 Hz.
+   Record the OLED value and a phone SPL app reading as a cross-check.
+
 ## Your files
 
 | File | Module | Function |
