@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Not team code. Blind ABX test for plain vs enhanced 32 kbit/s audio (macOS: uses afplay).
 # A = plain, B = enhanced (known). X = A or B, chosen at random for each trial and kept hidden.
-import glob, math, random, subprocess, sys
+import glob, math, os, random, subprocess, sys
 
 def play(path):
     subprocess.run(["afplay", path], check=True)
@@ -12,8 +12,9 @@ def p_value(correct, trials):
 
 def main():
     rng = random.SystemRandom()
-    plain = sorted(glob.glob("excerpt_*_plain.wav"))
-    enh = sorted(glob.glob("excerpt_*_enhanced.wav"))
+    folder = sys.argv[1] if len(sys.argv) > 1 else "."   # e.g. short_2s
+    plain = sorted(glob.glob(os.path.join(folder, "excerpt_*_plain.wav")))
+    enh = sorted(glob.glob(os.path.join(folder, "excerpt_*_enhanced.wav")))
     if len(plain) != len(enh) or not plain:
         sys.exit("expected matching excerpt_*_plain.wav and excerpt_*_enhanced.wav files")
     order = list(range(len(plain)))
@@ -23,7 +24,7 @@ def main():
         A, B = plain[idx], enh[idx]
         x_is_a = rng.random() < 0.5          # hidden key, kept only in memory
         X = A if x_is_a else B
-        print(f"\nTrial {trial} of {len(order)}  ({A.split('_')[1]})")
+        print(f"\nTrial {trial} of {len(order)}  ({os.path.basename(A).split('_')[1]})")
         while True:
             cmd = input("[a] play A  [b] play B  [x] play X  [g] guess (a/b)  [q] quit > ").strip().lower()
             if cmd == "a": play(A)

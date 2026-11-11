@@ -5,7 +5,7 @@ Read [README.md](README.md) first (goals, schedule, interface table §5, agent r
 **Your role:** goal 2 is best-effort; goal 1 comes first for the team. Your path is independent
 of ANC until week 2, when it plugs into A's output mux as `music` (MUSIC state).
 
-## Status and next steps (updated 9 Nov 2026)
+## Status and next steps (updated 11 Nov 2026)
 
 Done:
 - Decoder reports the bitrate (`res.bitrate`, read on every frame; the 32k file reads 32).
@@ -13,13 +13,18 @@ Done:
   `test_audio/beethoven5_ogg_knee_table.md`. 32 kbit/s: 7.2 kHz.
 - `model/goal2/ref.py`: float reference model (band-pass fc/2–fc, |x|, high-pass fc, low-pass 20 kHz,
   add with gain 1). Runs on the 32k decode with no clipping.
-- ABX set: `test_audio/ABXtesting/` (16 passages, plain vs enhanced, `abx.py`). Not yet run.
+- ABX test (11 Nov): 14/16 correct on 20 s passages, p = 0.0021 (one listener, Sony WH-CH520,
+  no EQ). See `test_audio/ABXtesting/README.md`.
+- Blind preference test (11 Nov, 2 s clips): enhanced preferred 16/16, p ≈ 0.000015.
+  Log: `docs/goal2_observations.md`.
 
 Next:
-1. Hardware session on Wednesday 11 Nov: `docs/hardware_testing_plan.md`, starting with T0.
-2. Run the ABX test when a good headset is available.
-3. Make the model fixed point (word lengths, rounding, saturation) and write its testbench.
-4. Decide the RTL only if the ABX result or the measurements show a gain.
+1. Hardware session today (11 Nov): `docs/hardware_testing_plan.md`, T0 to T3.
+2. Treble RTL before the 12 Nov freeze, following `docs/goal2_rtl_plan.md`: fixed-point model
+   first, then `rtl/treble_fixed.v` bit-exact against it, then `sim/tb_treble_fixed.v`.
+3. Combined mode (music + ANC, switch 11) is a proposal in `docs/goal2_rtl_plan.md` §6. It changes
+   A's FSM, mux, top and constraints, and touches B's and C's blocks, so agree it with them first.
+4. Confirm the 32 kbit/s cutoff on a second clip, and choose the gain.
 
 ## Data path
 

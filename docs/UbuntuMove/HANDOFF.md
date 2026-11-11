@@ -1,7 +1,7 @@
 # HANDOFF — EEE F314 FPGA-Based Audio Enhancement System (ZedBoard)
 <!-- id: doc -->
 
-*Rev 10 — patched 09 Nov 2026, 21:03 IST*
+*Rev 12 — patched 11 Nov 2026, 09:41 IST*
 
 Paste this at the start of a new chat to resume the project; it is self-contained.
 
@@ -10,8 +10,8 @@ Paste this at the start of a new chat to resume the project; it is self-containe
 ## 1. Status
 <!-- id: s1 -->
 STATUS: IN_PROGRESS
-UPDATED: 2026-11-09
-NOTE: Goal 2 target is 32 kbit/s at 48 kHz (cutoff 7.2 kHz); decoder reports the bitrate; float reference model in model/goal2/ref.py; ABX listening set ready but not yet run; hardware session 11 Nov pending. Goal 1 (Vivado build and audio-path hardware validation) still pending.
+UPDATED: 2026-11-11
+NOTE: Goal 2 at 32 kbit/s (cutoff 7.2 kHz). Listening: ABX 14/16 (p = 0.0021) and blind preference 16/16 for the enhanced version. Treble RTL plan in docs/goal2_rtl_plan.md, to be built before the 12 Nov freeze. Combined music + ANC mode proposed (§9 item 30). Hardware session 11 Nov in progress.
 
 ### Where we are
 <!-- id: s1.where -->
@@ -27,22 +27,20 @@ NOTE: Goal 2 target is 32 kbit/s at 48 kHz (cutoff 7.2 kHz); decoder reports the
 | Goal 2: UART receive, ARM MP3 decoding, PL FIFO | COMPLETED | D; end-to-end lab validation passed 5 Nov |
 | Goal 2: bitrate and cutoff | COMPLETED | Decoder reports the bitrate; 32 kbit/s cutoff 7.2 kHz (40 dB rule); table in test_audio/beethoven5_ogg_knee_table.md; §8 decisions 21–23 |
 | Goal 2: enhancement reference model | IN_PROGRESS | model/goal2/ref.py runs on the 32k decode (float); fixed point and testbench not started; GAIN = 1 not yet chosen (§9 item 27) |
-| Goal 2: ABX listening test | NOT_STARTED | 16 passages in test_audio/ABXtesting; needs a good headset (§9 item 25) |
+| Goal 2: listening tests | COMPLETED | ABX 14/16 on 20 s passages (p = 0.0021); blind preference on 2 s clips: enhanced preferred 16/16 (p ≈ 0.000015). One listener, Sony WH-CH520, no EQ, 11 Nov. Log: docs/goal2_observations.md |
 | Goal 2: FIFO path to the board | NOT_STARTED | Vivado block design with the PS and music_fifo_axi, then the ARM feeder (§9 item 26) |
-| Goal 2: treble RTL (treble_fixed) | NOT_STARTED | Only after the model and the ABX result show a gain |
+| Goal 2: treble RTL (treble_fixed) | NOT_STARTED | Plan in docs/goal2_rtl_plan.md (fixed-point model first); before the 12 Nov freeze (§8 decision 28) |
 | Smart-guess float prototype | COMPLETED | Claude's scaffolding, not team code; §5.4 |
 | Report, demo, code ZIP | NOT_STARTED | §2.2 |
 | Extra goals | NOT_STARTED | §13 |
 ### Immediate next steps
 <!-- id: s1.next -->
-1. Hardware session on Wednesday 11 Nov: docs/hardware_testing_plan.md, starting with T0 (laptop pre-flight). Work on the Ubuntu laptop from branch d/goal2 (§9 item 28).
-2. Run the ABX listening test (test_audio/ABXtesting/abx.py) with a good headset and record the score (§9 item 25).
-3. Confirm the 32 kbit/s cutoff on a second clip before relying on 7.2 kHz (§9 item 24).
-4. Choose the enhancement gain from measurement and listening, not from the ANC gains (§9 item 27).
-5. Build the FIFO path: Vivado block design with the PS and music_fifo_axi, then the ARM feeder (§9 item 26).
-6. Make the enhancement model fixed point and write its testbench, only if the ABX result or the measurements show a gain.
-7. Goal 1 continues in parallel: Aarav's codec passthrough, mode FSM and top level, then the ANC blocks.
-8. Ask the instructor to confirm the active-ANC interpretation and book the demo slot (§9 items 1 and 16).
+1. Hardware session today (11 Nov): docs/hardware_testing_plan.md, T0 to T3 (§9 item 28).
+2. Treble RTL before the 12 Nov freeze, following docs/goal2_rtl_plan.md: fixed-point model (model/goal2/ref_fixed.py), vectors, rtl/treble_fixed.v, sim/tb_treble_fixed.v.
+3. Agree the combined music + ANC mode with Aarav, Aadyant and Samarth (§9 item 30), and tell Aarav about the MUSIC/BYPASS flip on fifo_underrun in mode_fsm.v.
+4. Confirm the 32 kbit/s cutoff on a second clip (§9 item 24) and choose the gain (§9 item 27).
+5. FIFO path to the board: block design with the PS and music_fifo_axi, then the ARM feeder (§9 item 26).
+6. Ask the instructor to confirm the active-ANC interpretation and book the demo slot (§9 items 1 and 16).
 ## 2. Course constraints
 <!-- id: s2 -->
 
@@ -330,6 +328,7 @@ Setup: a 56 kbps MP3 (LAME via libsndfile) of each test clip, mono, 48 kHz, loud
 | 25 | GAIN = 1 for now | Not tied to the ANC gains; the gain sets the level of the added treble. Choose from measurement and listening (§9 item 27) | OPEN |
 | 26 | Test material: the public-domain Beethoven movement (Commons OGG) and a synthetic master. WAVs are not committed; they are rebuilt from the tracked MP3s | The WAVs total about 60 MB and are ignored by .gitignore; make_abx_wavs.py rebuilds them | CLOSED |
 | 27 | Pushes go to the member branch d/goal2, not main | Project rule (CLAUDE.md; plan §8) | CLOSED |
+| 28 | Goal 2 treble RTL (treble_fixed) is built before the 12 Nov freeze | ABX passed 14/16 (p = 0.0021) and the listener preferred the enhanced version; Swarneel's decision, 11 Nov | CLOSED |
 ## 9. Open items and risks
 <!-- id: s9 -->
 | # | Item | Status | Note |
@@ -358,10 +357,12 @@ Setup: a 56 kbps MP3 (LAME via libsndfile) of each test clip, mono, 48 kHz, loud
 | 22 | EQ preset definitions | CLOSED | EQ moved to extra goals (decision 18) |
 | 23 | Status display content | CLOSED | Pmod OLED: mode, noise reduction in dB, detected cutoff, FIFO level |
 | 24 | The 32 kbit/s cutoff (7.2 kHz, 40 dB rule) confirmed on a second clip or on real music | OPEN | Measured on one 20 s Beethoven passage; the spectrogram edge looks nearer 8 kHz |
-| 25 | ABX listening test, plain vs enhanced at 32 kbit/s | OPEN | 16 passages in test_audio/ABXtesting; run abx.py with a good headset |
+| 25 | ABX listening test, plain vs enhanced at 32 kbit/s | CLOSED | 14/16 correct, p = 0.0021 (20 s passages; one listener; Sony WH-CH520, no EQ; 11 Nov). Harder in bass-heavy or noisy passages (little energy in fc/2–fc); 20 s was too long to remember A |
 | 26 | FIFO path to the board: Vivado block design (PS + music_fifo_axi) and the ARM feeder in sw/app | OPEN | Handoff written 9 Nov, kept off the repo; needs the 11 Nov session first |
 | 27 | Enhancement gain (GAIN = 1 for now) | OPEN | Choose from measurement and listening, not from the ANC gains |
 | 28 | Hardware session 11 Nov (T0 to T3) | OPEN | docs/hardware_testing_plan.md; T0 is the laptop pre-flight |
+| 29 | Blind preference test (enhanced vs plain), 2 s clips | CLOSED | Enhanced preferred 16/16, p ≈ 0.000015 (11 Nov; one listener). ABX not repeated on 2 s clips (listener's decision) |
+| 30 | Combined mode: music + ANC together (SW 11), SW2 = plain/enhanced | OPEN | Swarneel's proposal, 11 Nov; docs/goal2_rtl_plan.md §6. Changes A's FSM, mux, top and constraints; affects B's FxLMS (music in e(n)) and C's meter (dB valid only in ANC mode). Needs agreement from A, B and C |
 ## 10. Execution plan
 <!-- id: s10 -->
 
