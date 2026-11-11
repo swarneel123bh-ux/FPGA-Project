@@ -9,8 +9,11 @@
 //   * Codec is serial-port MAIN; it drives BCLK and LRCLK to the FPGA.
 //   * I2S, stereo, 64 BCLK/frame, 24 significant bits in each 32-bit slot.
 //   * LINP and RINP are treated as the two single-ended ADC inputs.
+//     [Claude fix 11 Nov] The ZedBoard MIC jack (pink) is wired to LINN/RINN, so R4/R6 open
+//     LINN/RINN as well. On the board on 11 Nov the pink-jack mic arrived on the LEFT ADC.
 //
 // IMPORTANT ANALOG LIMITATION:
+// [Claude fix 11 Nov] R10/MICBIAS is now enabled (row 23); the line below describes the original.
 // R10/MICBIAS is deliberately left at reset default. ZedBoard JP1 is documented
 // as right-channel electret bias only. This RTL cannot make two electret mics
 // work until the second-mic bias/wiring decision is made and the register/input
@@ -19,6 +22,13 @@
 // PLL note: this version waits 10 ms after enabling the PLL, exceeding the
 // datasheet's ~2.95 ms typical lock time at 24 MHz, but does NOT poll R1[1].
 // Add I2C read/lock polling before treating this as production-ready.
+//
+// [Claude fix 11 Nov] Hardware test T3 on 11 Nov found four problems; rows changed or added are
+// marked with the same tag. Without rows 21-22 the codec drives no BCLK/LRCLK; without
+// rows 24-25 audio goes through the (stopped) DSP, so the DAC is silent and ADC data is 0.
+// Known issue NOT fixed here: ADDR1 doubles as CLATCH. Reprogramming the FPGA pulses it
+// low, and after a few reprograms the codec stops answering I2C (every write NACKs) until
+// the board is power-cycled. Power-cycle the ZedBoard before each reprogram.
 // -----------------------------------------------------------------------------
 `timescale 1ns/1ps
 module codec_cfg #(
@@ -72,8 +82,8 @@ module codec_cfg #(
             5'd5: begin rom_addr=16'h4016; rom_data=48'h000000000000; end // R16: I2S, 64 BCLK/frame, 1-bit delay
             5'd6: begin rom_addr=16'h4017; rom_data=48'h000000000000; end // R17: base fs = 48 kHz
             5'd7: begin rom_addr=16'h4009; rom_data=48'h000000000000; end // R3: normal record bias
-            5'd8: begin rom_addr=16'h400A; rom_data=48'h000000000051; end // R4: LINP 0 dB, Mixer 1 on
-            5'd9: begin rom_addr=16'h400C; rom_data=48'h000000000051; end // R6: RINP 0 dB, Mixer 2 on
+            5'd8: begin rom_addr=16'h400A; rom_data=48'h00000000005B; end // R4: LINP 0 dB, LINN 0 dB, Mixer 1 on  [Claude fix 11 Nov] was 0x51 (LINN muted)
+            5'd9: begin rom_addr=16'h400C; rom_data=48'h00000000005B; end // R6: RINP 0 dB, RINN 0 dB, Mixer 2 on  [Claude fix 11 Nov] was 0x51 (RINN muted)
             5'd10:begin rom_addr=16'h4019; rom_data=48'h000000000023; end // R19: HPF + both ADCs, analog input
             5'd11:begin rom_addr=16'h401A; rom_data=48'h000000000000; end // R20: left ADC 0 dB
             5'd12:begin rom_addr=16'h401B; rom_data=48'h000000000000; end // R21: right ADC 0 dB
@@ -81,10 +91,15 @@ module codec_cfg #(
             5'd14:begin rom_addr=16'h402A; rom_data=48'h000000000003; end // R36: both DACs on
             5'd15:begin rom_addr=16'h401C; rom_data=48'h000000000021; end // R22: left DAC -> left playback mixer
             5'd16:begin rom_addr=16'h401E; rom_data=48'h000000000041; end // R24: right DAC -> right playback mixer
-            5'd17:begin rom_addr=16'h4023; rom_data=48'h00000000006C; end // R29: left HP muted/disabled, -30 dB
-            5'd18:begin rom_addr=16'h4024; rom_data=48'h00000000006D; end // R30: right HP muted, HPMODE on, -30 dB
-            5'd19:begin rom_addr=16'h4023; rom_data=48'h00000000006F; end // R29: unmute left HP
-            5'd20:begin rom_addr=16'h4024; rom_data=48'h00000000006F; end // R30: unmute right HP
+            5'd17:begin rom_addr=16'h4023; rom_data=48'h0000000000BC; end // R29: left HP muted/disabled, -10 dB  [Claude fix 11 Nov] was -30 dB
+            5'd18:begin rom_addr=16'h4024; rom_data=48'h0000000000BD; end // R30: right HP muted, HPMODE on, -10 dB  [Claude fix 11 Nov] was -30 dB
+            5'd19:begin rom_addr=16'h4023; rom_data=48'h0000000000BF; end // R29: unmute left HP, -10 dB  [Claude fix 11 Nov]
+            5'd20:begin rom_addr=16'h4024; rom_data=48'h0000000000BF; end // R30: unmute right HP, -10 dB  [Claude fix 11 Nov]
+            5'd21:begin rom_addr=16'h40F9; rom_data=48'h00000000007F; end // R65: all digital clocks on (bit0 = serial port)  [Claude fix 11 Nov]
+            5'd22:begin rom_addr=16'h40FA; rom_data=48'h000000000003; end // R66: clock generators 0 and 1 on (BCLK/LRCLK)  [Claude fix 11 Nov]
+            5'd23:begin rom_addr=16'h4010; rom_data=48'h000000000001; end // R10: MICBIAS on  [Claude fix 11 Nov]
+            5'd24:begin rom_addr=16'h40F2; rom_data=48'h000000000001; end // R58: serial input -> DACs, not via DSP  [Claude fix 11 Nov]
+            5'd25:begin rom_addr=16'h40F3; rom_data=48'h000000000001; end // R59: ADCs -> serial output, not via DSP  [Claude fix 11 Nov]
             default: begin rom_addr=16'h4000; rom_len=3'd1; rom_data=48'h0; end
         endcase
     end
@@ -130,7 +145,7 @@ module codec_cfg #(
                         end else if (rom_index == 5'd18) begin
                             wait_count <= 0;
                             state <= C_HP_WAIT;
-                        end else if (rom_index == 5'd20) begin
+                        end else if (rom_index == 5'd25) begin  // [Claude fix 11 Nov] was 5'd20
                             ready <= 1'b1;
                             state <= C_DONE;
                         end else begin

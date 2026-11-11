@@ -20,7 +20,8 @@ Done:
   Log: `docs/goal2_observations.md`.
 
 Next:
-1. Hardware session today (11 Nov): `docs/hardware_testing_plan.md`, T0 to T3.
+1. Hardware session 11 Nov done: T0–T2 pass; T3 passes after four `codec_cfg` fixes. Redo the
+   left/right and second-mic checks with working headphones. `docs/hardware_results_2026-11-11.md`.
 2. Treble RTL before the 12 Nov freeze, following `docs/goal2_rtl_plan.md`: fixed-point model
    first, then `rtl/treble_fixed.v` bit-exact against it, then `sim/tb_treble_fixed.v`.
 3. Combined mode (music + ANC, switch 11) is a proposal in `docs/goal2_rtl_plan.md` §6. It changes

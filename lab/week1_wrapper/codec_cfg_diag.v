@@ -1,7 +1,8 @@
-// NOT TEAM CODE. Lab-only copy of rtl/codec_cfg.v (Aarav's file is unchanged), made by Claude
-// on 11 Nov 2026 for hardware test T3. Only change: ROM rows 21-22 enable the codec's digital
-// clocks (R65 0x40F9 = 0x7F, R66 0x40FA = 0x03). Both reset to 0x00, which leaves the serial
-// port off, so the codec never drives BCLK/LRCLK. Proposed fix for Aarav to adopt.
+// NOT TEAM CODE. Diagnostic copy of rtl/codec_cfg.v used during the 11 Nov 2026 T3 debug (Claude).
+// ROM = the fixed rtl/codec_cfg.v (rows 0-25, see its [Claude fix 11 Nov] tags) plus rows 26-27:
+// R5/R7 = 0x05 open LAUX/RAUX (blue line-in) at 0 dB. Diagnostics: a NACKed write is retried once;
+// if it fails again its row is recorded in fail_index and the sequence CONTINUES (error stays high).
+// Used only by lab/week1_wrapper/week1_diag_top.v.
 // -----------------------------------------------------------------------------
 // WEEK-1 SCAFFOLDING — review and understand before adopting as team RTL.
 // ADAU1761 power-up/configuration sequencer for the ZedBoard.
@@ -39,7 +40,9 @@ module codec_cfg #(
     inout  wire codec_sda,
     output wire busy,
     output reg  ready,
-    output reg  error
+    output reg  error,
+    output reg  [4:0] fail_index,   // first ROM row that NACKed twice
+    output reg  retried              // some write NACKed once and was retried
 );
     localparam integer HALF_DIV = CLK_HZ / (2 * I2C_HZ);
     localparam [2:0] C_POWER_WAIT = 3'd0,
@@ -54,6 +57,7 @@ module codec_cfg #(
     reg [31:0] wait_count;
     reg [4:0] rom_index;
     reg i2c_start;
+    reg retry_used;
     wire i2c_busy, i2c_done, i2c_nack;
     reg [15:0] rom_addr;
     reg [2:0] rom_len;
@@ -76,8 +80,8 @@ module codec_cfg #(
             5'd5: begin rom_addr=16'h4016; rom_data=48'h000000000000; end // R16: I2S, 64 BCLK/frame, 1-bit delay
             5'd6: begin rom_addr=16'h4017; rom_data=48'h000000000000; end // R17: base fs = 48 kHz
             5'd7: begin rom_addr=16'h4009; rom_data=48'h000000000000; end // R3: normal record bias
-            5'd8: begin rom_addr=16'h400A; rom_data=48'h000000000051; end // R4: LINP 0 dB, Mixer 1 on
-            5'd9: begin rom_addr=16'h400C; rom_data=48'h000000000051; end // R6: RINP 0 dB, Mixer 2 on
+            5'd8: begin rom_addr=16'h400A; rom_data=48'h00000000005B; end // R4: LINP 0 dB, LINN 0 dB (ZedBoard MIC jack is on LINN), Mixer 1 on
+            5'd9: begin rom_addr=16'h400C; rom_data=48'h00000000005B; end // R6: RINP 0 dB, RINN 0 dB (ZedBoard MIC jack is on RINN), Mixer 2 on
             5'd10:begin rom_addr=16'h4019; rom_data=48'h000000000023; end // R19: HPF + both ADCs, analog input
             5'd11:begin rom_addr=16'h401A; rom_data=48'h000000000000; end // R20: left ADC 0 dB
             5'd12:begin rom_addr=16'h401B; rom_data=48'h000000000000; end // R21: right ADC 0 dB
@@ -85,12 +89,17 @@ module codec_cfg #(
             5'd14:begin rom_addr=16'h402A; rom_data=48'h000000000003; end // R36: both DACs on
             5'd15:begin rom_addr=16'h401C; rom_data=48'h000000000021; end // R22: left DAC -> left playback mixer
             5'd16:begin rom_addr=16'h401E; rom_data=48'h000000000041; end // R24: right DAC -> right playback mixer
-            5'd17:begin rom_addr=16'h4023; rom_data=48'h00000000006C; end // R29: left HP muted/disabled, -30 dB
-            5'd18:begin rom_addr=16'h4024; rom_data=48'h00000000006D; end // R30: right HP muted, HPMODE on, -30 dB
-            5'd19:begin rom_addr=16'h4023; rom_data=48'h00000000006F; end // R29: unmute left HP
-            5'd20:begin rom_addr=16'h4024; rom_data=48'h00000000006F; end // R30: unmute right HP
+            5'd17:begin rom_addr=16'h4023; rom_data=48'h0000000000BC; end // R29: left HP muted/disabled, -10 dB
+            5'd18:begin rom_addr=16'h4024; rom_data=48'h0000000000BD; end // R30: right HP muted, HPMODE on, -10 dB
+            5'd19:begin rom_addr=16'h4023; rom_data=48'h0000000000BF; end // R29: unmute left HP
+            5'd20:begin rom_addr=16'h4024; rom_data=48'h0000000000BF; end // R30: unmute right HP
             5'd21:begin rom_addr=16'h40F9; rom_data=48'h00000000007F; end // R65: all digital clocks on (bit0 = serial port)
             5'd22:begin rom_addr=16'h40FA; rom_data=48'h000000000003; end // R66: clock generators 0 and 1 on
+            5'd23:begin rom_addr=16'h4010; rom_data=48'h000000000001; end // R10: MICBIAS enable
+            5'd24:begin rom_addr=16'h40F2; rom_data=48'h000000000001; end // R58: serial input -> DACs (0 = via DSP)
+            5'd25:begin rom_addr=16'h40F3; rom_data=48'h000000000001; end // R59: ADCs -> serial output (0 = via DSP)
+            5'd26:begin rom_addr=16'h400B; rom_data=48'h000000000005; end // R5: LAUX (blue line-in) 0 dB into Mixer 1
+            5'd27:begin rom_addr=16'h400D; rom_data=48'h000000000005; end // R7: RAUX (blue line-in) 0 dB into Mixer 2
             default: begin rom_addr=16'h4000; rom_len=3'd1; rom_data=48'h0; end
         endcase
     end
@@ -111,6 +120,9 @@ module codec_cfg #(
             i2c_start  <= 1'b0;
             ready      <= 1'b0;
             error      <= 1'b0;
+            fail_index <= 5'd0;
+            retried    <= 1'b0;
+            retry_used <= 1'b0;
         end else begin
             i2c_start <= 1'b0;
             case (state)
@@ -127,21 +139,31 @@ module codec_cfg #(
                 end
                 C_XFER_WAIT: begin
                     if (i2c_done) begin
+                        if (i2c_nack && !retry_used) begin
+                            // diagnostic: retry the same row once
+                            retry_used <= 1'b1;
+                            retried    <= 1'b1;
+                            state      <= C_LAUNCH;
+                        end else begin
+                        retry_used <= 1'b0;
                         if (i2c_nack) begin
+                            // diagnostic: record the first failing row, then carry on
+                            if (!error) fail_index <= rom_index;
                             error <= 1'b1;
-                            state <= C_ERROR;
-                        end else if (rom_index == 5'd2) begin
+                        end
+                        if (rom_index == 5'd2) begin
                             wait_count <= 0;
                             state <= C_PLL_WAIT;
                         end else if (rom_index == 5'd18) begin
                             wait_count <= 0;
                             state <= C_HP_WAIT;
-                        end else if (rom_index == 5'd22) begin
+                        end else if (rom_index == 5'd27) begin
                             ready <= 1'b1;
                             state <= C_DONE;
                         end else begin
                             rom_index <= rom_index + 1'b1;
                             state <= C_LAUNCH;
+                        end
                         end
                     end
                 end

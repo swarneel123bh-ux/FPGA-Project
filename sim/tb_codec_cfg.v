@@ -50,8 +50,8 @@ module tb_codec_cfg;
                     5: case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h16; 3:expected_byte=8'h00; endcase
                     6: case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h17; 3:expected_byte=8'h00; endcase
                     7: case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h09; 3:expected_byte=8'h00; endcase
-                    8: case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h0A; 3:expected_byte=8'h51; endcase
-                    9: case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h0C; 3:expected_byte=8'h51; endcase
+                    8: case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h0A; 3:expected_byte=8'h5B; endcase // [Claude fix 11 Nov] was 51
+                    9: case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h0C; 3:expected_byte=8'h5B; endcase // [Claude fix 11 Nov] was 51
                     10:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h19; 3:expected_byte=8'h23; endcase
                     11:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h1A; 3:expected_byte=8'h00; endcase
                     12:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h1B; 3:expected_byte=8'h00; endcase
@@ -59,10 +59,15 @@ module tb_codec_cfg;
                     14:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h2A; 3:expected_byte=8'h03; endcase
                     15:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h1C; 3:expected_byte=8'h21; endcase
                     16:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h1E; 3:expected_byte=8'h41; endcase
-                    17:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h23; 3:expected_byte=8'h6C; endcase
-                    18:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h24; 3:expected_byte=8'h6D; endcase
-                    19:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h23; 3:expected_byte=8'h6F; endcase
-                    20:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h24; 3:expected_byte=8'h6F; endcase
+                    17:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h23; 3:expected_byte=8'hBC; endcase // [Claude fix 11 Nov] was 6C
+                    18:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h24; 3:expected_byte=8'hBD; endcase // [Claude fix 11 Nov] was 6D
+                    19:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h23; 3:expected_byte=8'hBF; endcase // [Claude fix 11 Nov] was 6F
+                    20:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h24; 3:expected_byte=8'hBF; endcase // [Claude fix 11 Nov] was 6F
+                    21:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'hF9; 3:expected_byte=8'h7F; endcase // [Claude fix 11 Nov] R65
+                    22:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'hFA; 3:expected_byte=8'h03; endcase // [Claude fix 11 Nov] R66
+                    23:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'h10; 3:expected_byte=8'h01; endcase // [Claude fix 11 Nov] R10
+                    24:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'hF2; 3:expected_byte=8'h01; endcase // [Claude fix 11 Nov] R58
+                    25:case (b) 1:expected_byte=8'h40; 2:expected_byte=8'hF3; 3:expected_byte=8'h01; endcase // [Claude fix 11 Nov] R59
                 endcase
             end
         end
@@ -122,9 +127,9 @@ module tb_codec_cfg;
         rst = 0;
         wait (ready || error);
         if (error) $fatal(1, "codec_cfg reported I2C NACK/error");
-        if (transaction_count != 21)
-            $fatal(1, "Observed %0d transactions, expected 21", transaction_count);
-        $display("PASS: codec_cfg emitted all 21 expected I2C transactions.");
+        if (transaction_count != 26) // [Claude fix 11 Nov] was 21
+            $fatal(1, "Observed %0d transactions, expected 26", transaction_count);
+        $display("PASS: codec_cfg emitted all 26 expected I2C transactions.");
         $finish;
     end
 

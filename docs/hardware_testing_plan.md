@@ -3,6 +3,14 @@
 *Written by Claude as a test guide (not team code). Covers what can be tested on the ZedBoard
 this week. Run it on the Ubuntu laptop with Vivado and Vitis 2020.2, using the board in the lab.*
 
+
+> **Results (11 Nov):** see [`hardware_results_2026-11-11.md`](hardware_results_2026-11-11.md).
+> Corrections found in the session: the week-1 top cannot make a bitstream on its own (52 unplaced
+> ports stop `write_bitstream` with NSTD-1/UCIO-1, not warnings); use `lab/week1_wrapper/`.
+> `codec_cfg` needed four fixes (now in `rtl/codec_cfg.v`). Power-cycle the board before every
+> reprogram. On this laptop the tools are under `~/Xilinx/...`, not `/tools/Xilinx/...`, and the
+> repo is at `~/Documents/Programming/FPGAProject1/FPGA-Project`.
+
 ---
 
 ## Part 1: Requirements

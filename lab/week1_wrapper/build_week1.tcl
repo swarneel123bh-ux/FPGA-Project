@@ -3,7 +3,7 @@
 set out ./build/week1
 file mkdir $out
 create_project -in_memory -part xc7z020clg484-1
-read_verilog {rtl/week1_passthrough_top.v rtl/mclk_out.v lab/week1_wrapper/codec_cfg_lab.v rtl/adau_i2c_write.v
+read_verilog {rtl/week1_passthrough_top.v rtl/mclk_out.v rtl/codec_cfg.v rtl/adau_i2c_write.v
               rtl/i2s_rx.v rtl/i2s_tx.v lab/week1_wrapper/week1_lab_wrapper.v}
 read_xdc constraints/zedboard_week1.xdc
 read_xdc lab/week1_wrapper/week1_lab_wrapper.xdc
