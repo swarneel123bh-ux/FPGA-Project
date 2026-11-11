@@ -12,8 +12,9 @@
   to match (26 transactions, passes).
 - **One known issue remains:** reprogramming the FPGA several times without a power cycle makes the
   codec stop answering I2C. **Power-cycle the ZedBoard (SW8) before each reprogram.**
-- **To redo:** left/right check and a second mic, with headphones known to work on both sides
-  (the pair used had a dead right earpiece).
+- **Afternoon retest** with other mics and a headset that works on both sides: LEDs and switches all
+  pass, but the left ear crackled. Cause: a timing race in `rtl/i2s_tx.v` (below). Fixed and
+  confirmed on the board: no crackle with `week1_lab_wrapper.bit` built from the fixed RTL.
 
 ## Results sheet
 
@@ -33,7 +34,8 @@
 | T3e FPGA tone → headphone | PASS after fix 2 | 1 kHz square, −24 dBFS, heard in the left ear | Right earpiece of the headset was broken |
 | T3e mic → headphone | PASS after fix 4 | pink jack; tone and music heard | Mic lands on the **left** ADC (heard in left ear with stereo passthrough) |
 | T3e mic level (0 dB analog gain) | measured | tone/music peaks above −30 dBFS; silence about −78 to −66 dBFS | Level bar on LD3–LD7 of the diagnostic build |
-| T3e L/R swap | BLOCKED | | Redo with working headphones |
+| T3e L/R swap | PASS (afternoon) | working headset; LEDs and switches pass | |
+| T3e crackle in left ear | FIXED | gone after the `i2s_tx` fix | see "Crackle" below |
 | T3e second mic | NOT TESTED | | One mic only |
 | JP1 position | not recorded | | Record next time |
 | T4, T5, T6 | not tested | | Out of scope |
@@ -53,6 +55,20 @@ All found on the board. Register meanings checked against the Linux ADAU17x1 dri
 Source for the MIC-jack wiring: a third-party ZedBoard write-up
 (<https://henryomd.blogspot.com/2015/06/listening-to-sound-on-zedboard.html>), matched by the
 board behaviour. Check the Avnet ZedBoard schematic before the report quotes it.
+
+## Crackle: `i2s_tx` LRCLK race (fixed)
+
+Heard: steady crackle in the left ear (the channel carrying the mic) with passthrough.
+
+Cause: the codec changes LRCLK on the same falling BCLK edge where `i2s_tx` read it. If LRCLK reaches
+its synchroniser even ~1 ns after BCLK, the start of the word is seen one bit late and that word is
+sent shifted by one bit (a large spike for negative samples). BCLK drifts against the 100 MHz clock,
+so it hits random frames. In simulation (`sim/tb_i2s_tx_skew.v`, 200 drifting frames per skew), the old
+block got 18 % of frames wrong at +1 ns skew, 59 % at +3 ns and all of them from +8 ns.
+
+Fix (`rtl/i2s_tx.v`, tagged `[Claude fix 11 Nov]`): sample LRCLK on the rising BCLK edge, where it is
+stable, and drive the MSB on the next falling edge, as `i2s_rx` already does. The skew test passes
+from -60 to +60 ns; `tb_i2s_tx` still passes. Confirmed on the board.
 
 ## Known issue: codec stops answering I2C after reprogramming
 
@@ -80,10 +96,8 @@ in `lab/week1_wrapper/` gives every port a pin. The integration top `rtl/top.v` 
 - ZPS7-1 "PS7 block required": the week-1 design is PL-only.
 - Synth 8-589: `!==` in `adau_i2c_write.v` line 131 is synthesised as `!=`.
 
-## For the retest with working headphones
+## Still open
 
-Use `lab/week1_wrapper/` (see its README). Power-cycle, program once, then:
-1. Build `week1_lab_wrapper.bit` (plain passthrough, fixed `rtl/codec_cfg.v`): mic in the pink jack,
-   tone near it. Which ear? Expected: left (the mic lands on the left ADC).
-2. Second mic: record which channel it lands on and whether it needs JP1 or MICBIAS.
-3. Record JP1's position.
+- Second mic: which channel it lands on and whether it needs JP1 or MICBIAS. `rtl/top.v` uses the
+  left ADC as `x_ref` (reference mic) and the right ADC as `e_err` (error mic).
+- Record JP1's position.

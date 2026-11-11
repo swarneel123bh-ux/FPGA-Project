@@ -10,3 +10,10 @@ vvp sim/build/tb_out_mux
 # [Claude fix 11 Nov] codec_cfg regression (26 I2C transactions after the T3 hardware fixes)
 iverilog -g2012 -Wall -o sim/build/tb_codec_cfg rtl/codec_cfg.v rtl/adau_i2c_write.v sim/tb_codec_cfg.v
 vvp sim/build/tb_codec_cfg
+# [Claude fix 11 Nov] I2S regressions (tb_i2s_tx_skew is Claude's, for the crackle seen on the board)
+iverilog -g2012 -Wall -o sim/build/tb_i2s_rx rtl/i2s_rx.v sim/tb_i2s_rx.v
+vvp sim/build/tb_i2s_rx
+iverilog -g2012 -Wall -o sim/build/tb_i2s_tx rtl/i2s_tx.v sim/tb_i2s_tx.v
+vvp sim/build/tb_i2s_tx
+iverilog -g2012 -Wall -o sim/build/tb_i2s_tx_skew rtl/i2s_tx.v sim/tb_i2s_tx_skew.v
+vvp sim/build/tb_i2s_tx_skew
