@@ -19,3 +19,10 @@ vvp sim/build/tb_db_calc
 
 iverilog -g2012 -o sim/build/tb_anc_measurement rtl/power_meter.v rtl/db_calc.v rtl/anc_measurement.v sim/tb_anc_measurement.v
 vvp sim/build/tb_anc_measurement
+
+# [Claude pipelining 11 Nov] Member B's bit-exact FxLMS tests were not in any run script.
+iverilog -g2012 -o sim/build/tb_fxlms rtl/fxlms.v sim/tb_fxlms.v
+vvp sim/build/tb_fxlms
+
+iverilog -g2012 -o sim/build/tb_anc_loop rtl/fxlms.v sim/tb_anc_loop.v
+vvp sim/build/tb_anc_loop

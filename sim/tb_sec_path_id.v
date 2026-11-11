@@ -138,8 +138,10 @@ module tb_sec_path_id;
             $display("sample_count mismatch got=%0d expected=%0d", sample_count, NUM_SAMPLES);
             errors = errors + 1;
         end
-        if (last_id_cycles !== 16'd256) begin
-            $display("last_id_cycles mismatch got=%0d expected=256", last_id_cycles);
+        // [Claude pipelining 11 Nov] 128 taps x 4 clocks (estimate) + 3 + 128 x 6 (update) = 1283;
+        // was 256 with the single-cycle datapath. Must stay below ~2083 clocks/sample at 48 kHz.
+        if (last_id_cycles !== 16'd1283) begin
+            $display("last_id_cycles mismatch got=%0d expected=1283", last_id_cycles);
             errors = errors + 1;
         end
         if (coeff_overflow !== 1'b0) begin

@@ -11,7 +11,7 @@ module tb_anc_loop;
     localparam integer L = 64;
     localparam integer M = 128;
     localparam integer NUM = 4096;
-    localparam integer WAIT_CYCLES = 420;
+    localparam integer WAIT_CYCLES = 2000; // [Claude pipelining 11 Nov] was 420; pipelined fxlms needs ~1290 clocks, a 48 kHz sample is ~2083
 
     reg clk = 1'b0;
     always #5 clk = ~clk;

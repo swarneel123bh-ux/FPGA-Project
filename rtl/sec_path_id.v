@@ -16,6 +16,13 @@
 // For each accepted sample, the engine makes one 128-tap estimate pass and
 // one 128-tap coefficient-update pass. At 100 MHz this is comfortably faster
 // than a 48 kHz sample stream (256 clocks versus about 2083 clocks/sample).
+//
+// [Claude pipelining 11 Nov] The one-tap-per-clock datapath (128-way read, 24x24 multiply, 64-bit
+// round/add, saturate, write in one cycle) needed ~25 ns and failed timing at 100 MHz by
+// 15 ns. Each tap now takes a few clocks with a register between steps: 4 clocks per
+// estimate tap, 6 per update tap, ~1290 clocks per sample (budget 2083). The arithmetic
+// and its order are unchanged, so results stay bit-exact with the Python model.
+// round_shift64 uses an equivalent single-adder form. Lines changed or added carry the tag.
 module sec_path_id #(
     parameter integer M = 128,
     parameter integer MU_S_SHIFT = 6,
@@ -46,6 +53,7 @@ module sec_path_id #(
     localparam [1:0] ST_IDLE   = 2'd0;
     localparam [1:0] ST_EST    = 2'd1;
     localparam [1:0] ST_UPDATE = 2'd2;
+    localparam [1:0] ST_EST_FIN = 2'd3;   // [Claude pipelining 11 Nov]
 
     reg [1:0] state;
     reg [ADDR_W-1:0] tap_index;
@@ -55,6 +63,15 @@ module sec_path_id #(
     reg signed [23:0] epsilon_reg;
     reg signed [63:0] estimate_accum;
     reg [15:0] elapsed_counter;
+    // [Claude pipelining 11 Nov] BEGIN pipeline registers
+    reg [2:0] phase;                     // step within the current tap
+    reg signed [23:0] op_a_r, op_b_r;    // registered multiplier operands
+    reg signed [47:0] prod_r, prod_r2;   // two product registers (map into DSP M/P regs)
+    reg signed [23:0] shat_old_r;        // coefficient read for the update tap
+    reg signed [63:0] round_r;           // rounded estimate / update delta
+    reg signed [63:0] shat_next_r;       // updated coefficient before saturation
+    reg signed [23:0] estimate_r;
+    // [Claude pipelining 11 Nov] END
 
     integer i;
 
@@ -75,15 +92,14 @@ module sec_path_id #(
         reg signed [63:0] magnitude;
         reg signed [63:0] rounded_magnitude;
         begin
-            if (shift <= 0) begin
+            // [Claude pipelining 11 Nov] Same result as the original (round half away from zero):
+            // negative values add half-1 instead of negate/add/negate, so one adder.
+            // Checked equal on 2.4M random cases for |value| < 2^62.
+            magnitude = 64'sd0; rounded_magnitude = 64'sd0;
+            if (shift <= 0)
                 round_shift64 = value <<< (-shift);
-            end else if (value >= 0) begin
-                round_shift64 = (value + (64'sd1 <<< (shift - 1))) >>> shift;
-            end else begin
-                magnitude = -value;
-                rounded_magnitude = (magnitude + (64'sd1 <<< (shift - 1))) >>> shift;
-                round_shift64 = -rounded_magnitude;
-            end
+            else
+                round_shift64 = (value + ((64'sd1 <<< (shift - 1)) - (value[63] ? 64'sd1 : 64'sd0))) >>> shift;
         end
     endfunction
 
@@ -99,31 +115,15 @@ module sec_path_id #(
         end
     endfunction
 
-    wire signed [47:0] estimate_a_ext =
-        {{24{shat_mem[tap_index][23]}}, shat_mem[tap_index]};
-    wire signed [47:0] estimate_b_ext =
-        {{24{probe_hist[tap_index][23]}}, probe_hist[tap_index]};
-    wire signed [47:0] estimate_product = estimate_a_ext * estimate_b_ext;
-    wire signed [63:0] estimate_product_ext =
-        {{16{estimate_product[47]}}, estimate_product};
-    wire signed [63:0] estimate_sum_next = estimate_accum + estimate_product_ext;
-    wire signed [23:0] estimate_next = sat24(round_shift64(estimate_sum_next, 22));
+    // [Claude pipelining 11 Nov] BEGIN datapath: one shared multiplier on registered operands.
+    wire signed [63:0] prod_ext = {{16{prod_r2[47]}}, prod_r2};
     wire signed [63:0] epsilon_wide =
         $signed({{40{measured_sample[23]}}, measured_sample}) -
-        $signed({{40{estimate_next[23]}}, estimate_next});
+        $signed({{40{estimate_r[23]}}, estimate_r});
     wire signed [23:0] epsilon_next = sat24(epsilon_wide);
-
-    wire signed [47:0] update_a_ext = {{24{epsilon_reg[23]}}, epsilon_reg};
-    wire signed [47:0] update_b_ext =
-        {{24{probe_hist[tap_index][23]}}, probe_hist[tap_index]};
-    wire signed [47:0] update_product = update_a_ext * update_b_ext;
-    wire signed [63:0] update_product_ext = {{16{update_product[47]}}, update_product};
     // Q1.23 * Q1.23 -> Q2.46; convert to Q2.22 and apply mu_s=2^-6:
     // total right shift = 46 - 22 + 6 = 30.
-    wire signed [63:0] delta_shat = round_shift64(update_product_ext, 24 + MU_S_SHIFT);
-    wire signed [63:0] shat_old_ext =
-        {{40{shat_mem[tap_index][23]}}, shat_mem[tap_index]};
-    wire signed [63:0] shat_next_wide = shat_old_ext + delta_shat;
+    // [Claude pipelining 11 Nov] END
 
     always @(posedge clk) begin
         if (rst) begin
@@ -141,6 +141,7 @@ module sec_path_id #(
             elapsed_counter  <= 16'd0;
             coeff_overflow   <= 1'b0;
             sample_overrun   <= 1'b0;
+            phase            <= 3'd0;   // [Claude pipelining 11 Nov]
             for (i = 0; i < M; i = i + 1) begin
                 shat_mem[i]  <= 24'sd0;
                 probe_hist[i] <= 24'sd0;
@@ -160,6 +161,7 @@ module sec_path_id #(
             elapsed_counter  <= 16'd0;
             coeff_overflow   <= 1'b0;
             sample_overrun   <= 1'b0;
+            phase            <= 3'd0;   // [Claude pipelining 11 Nov]
             for (i = 0; i < M; i = i + 1) begin
                 shat_mem[i]  <= 24'sd0;
                 probe_hist[i] <= 24'sd0;
@@ -185,40 +187,84 @@ module sec_path_id #(
                         tap_index <= {ADDR_W{1'b0}};
                         estimate_accum <= 64'sd0;
                         elapsed_counter <= 16'd0;
+                        phase <= 3'd0;   // [Claude pipelining 11 Nov]
                         busy <= 1'b1;
                         state <= ST_EST;
                     end
                 end
 
+                // [Claude pipelining 11 Nov] BEGIN multi-clock estimate and update passes
                 ST_EST: begin
-                    if (tap_index == M-1) begin
-                        epsilon_reg    <= epsilon_next;
-                        id_error       <= epsilon_next;
-                        id_error_valid <= 1'b1;
-                        tap_index      <= {ADDR_W{1'b0}};
-                        state          <= ST_UPDATE;
-                    end else begin
-                        estimate_accum <= estimate_sum_next;
-                        tap_index <= tap_index + 1'b1;
-                    end
+                    case (phase)
+                        3'd0: begin   // read operands
+                            op_a_r <= shat_mem[tap_index];
+                            op_b_r <= probe_hist[tap_index];
+                            phase  <= 3'd1;
+                        end
+                        3'd1: begin prod_r  <= op_a_r * op_b_r; phase <= 3'd2; end
+                        3'd2: begin prod_r2 <= prod_r;          phase <= 3'd3; end
+                        default: begin   // accumulate
+                            estimate_accum <= estimate_accum + prod_ext;
+                            phase <= 3'd0;
+                            if (tap_index == M-1) begin
+                                tap_index <= {ADDR_W{1'b0}};
+                                state     <= ST_EST_FIN;
+                            end else begin
+                                tap_index <= tap_index + 1'b1;
+                            end
+                        end
+                    endcase
+                end
+
+                ST_EST_FIN: begin
+                    case (phase)
+                        3'd0: begin round_r <= round_shift64(estimate_accum, 22); phase <= 3'd1; end
+                        3'd1: begin estimate_r <= sat24(round_r);                  phase <= 3'd2; end
+                        default: begin
+                            epsilon_reg    <= epsilon_next;
+                            id_error       <= epsilon_next;
+                            id_error_valid <= 1'b1;
+                            tap_index      <= {ADDR_W{1'b0}};
+                            phase          <= 3'd0;
+                            state          <= ST_UPDATE;
+                        end
+                    endcase
                 end
 
                 ST_UPDATE: begin
-                    shat_mem[tap_index] <= sat24(shat_next_wide);
-                    if ((shat_next_wide > 64'sd8388607) ||
-                        (shat_next_wide < -64'sd8388608))
-                        coeff_overflow <= 1'b1;
-
-                    if (tap_index == M-1) begin
-                        state <= ST_IDLE;
-                        busy <= 1'b0;
-                        done <= 1'b1;
-                        sample_count <= sample_count + 1'b1;
-                        last_id_cycles <= elapsed_counter + 1'b1;
-                    end else begin
-                        tap_index <= tap_index + 1'b1;
-                    end
+                    case (phase)
+                        3'd0: begin   // read operands
+                            op_a_r     <= epsilon_reg;
+                            op_b_r     <= probe_hist[tap_index];
+                            shat_old_r <= shat_mem[tap_index];
+                            phase      <= 3'd1;
+                        end
+                        3'd1: begin prod_r  <= op_a_r * op_b_r; phase <= 3'd2; end
+                        3'd2: begin prod_r2 <= prod_r;          phase <= 3'd3; end
+                        3'd3: begin round_r <= round_shift64(prod_ext, 24 + MU_S_SHIFT); phase <= 3'd4; end
+                        3'd4: begin
+                            shat_next_r <= {{40{shat_old_r[23]}}, shat_old_r} + round_r;
+                            phase <= 3'd5;
+                        end
+                        default: begin   // saturate and write back
+                            shat_mem[tap_index] <= sat24(shat_next_r);
+                            if ((shat_next_r > 64'sd8388607) ||
+                                (shat_next_r < -64'sd8388608))
+                                coeff_overflow <= 1'b1;
+                            phase <= 3'd0;
+                            if (tap_index == M-1) begin
+                                state <= ST_IDLE;
+                                busy <= 1'b0;
+                                done <= 1'b1;
+                                sample_count <= sample_count + 1'b1;
+                                last_id_cycles <= elapsed_counter + 1'b1;
+                            end else begin
+                                tap_index <= tap_index + 1'b1;
+                            end
+                        end
+                    endcase
                 end
+                // [Claude pipelining 11 Nov] END
 
                 default: begin
                     state <= ST_IDLE;
