@@ -3,6 +3,30 @@
 *Written by Claude as a plan (not team code). Swarneel writes the model, RTL and testbench; Claude
 reviews. Numbers below were measured from `model/goal2/ref.py` on 11 Nov 2026.*
 
+## 0. Status (11 Nov 2026, evening)
+
+Swarneel assigned the port to Claude, so the model, RTL and testbench are Claude's work (each file
+header says so). Done:
+
+- `model/goal2/ref_fixed.py`: fixed-point model; writes `rtl/treble_coefs.mem` and
+  `sim/vectors/treble_{in,out}.hex` (30,756 samples: silence, ±full-scale impulses, full-scale
+  5 kHz sine and 6 kHz square, 0.5 s of the 32k Beethoven decode).
+  Fixed vs float on the added treble: 81.3 dB over the whole 20 s clip; no clipping.
+- **Change from §3:** internal samples are 32 bits (4 guard bits **and 4 fraction bits** below the
+  s24 LSB), not 28. With 28 bits the rounding noise was only 49 dB below the treble, because the
+  first band-pass section has gain about 0.002 and later sections amplify its rounding.
+- `rtl/treble_fixed.v`: bit-exact with the model (`sim/tb_treble_fixed.v`, 34,056 checks, all
+  §5 checks pass). Result ready 112 clocks after the tick. Starts 2 clocks after the tick,
+  when `music_fifo` has `music_raw` valid. `enh_en` is synchronised (2 flops).
+- Vivado 2026.1 out-of-context, xc7z020clg484-1, 100 MHz: timing met (WNS +3.1 ns), about 900
+  LUTs, 1,800 flip-flops, 2 DSP48E1, no block RAM. Not yet built in the lab's Vivado 2020.
+- Run: `./sim/run_treble.sh` (needs numpy and scipy in `.venv`).
+
+Integration (Aarav's files, not changed): in `top.v`, `music_fifo_axi.music_raw` → `treble_fixed`
+→ `out_mux.music`, with `enh_en` on a free switch (SW2 proposed). Add `rtl/treble_fixed.v` **and
+`rtl/treble_coefs.mem`** to `scripts/create_vivado.tcl`; without the `.mem` file the ROM
+synthesises as zeros and the output is the plain music.
+
 ## 1. Scope for the 12 Nov freeze
 
 - One coefficient set: 32 kbit/s, FC = 7.2 kHz. Bitrate-dependent sets come later.

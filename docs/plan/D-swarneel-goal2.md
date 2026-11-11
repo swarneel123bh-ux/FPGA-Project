@@ -19,11 +19,15 @@ Done:
 - ABX on the 2 s clips (11 Nov): 14/16, p = 0.0021; misses in bass-heavy passages.
   Log: `docs/goal2_observations.md`.
 
+- Treble RTL (11 Nov, written by Claude at Swarneel's request): `model/goal2/ref_fixed.py`,
+  `rtl/treble_fixed.v`, `sim/tb_treble_fixed.v`; bit-exact, timing met at 100 MHz.
+  See `docs/goal2_rtl_plan.md` §0.
+
 Next:
 1. Hardware session 11 Nov done: T0–T2 pass; T3 passes after four `codec_cfg` fixes. Redo the
    left/right and second-mic checks with working headphones. `docs/hardware_results_2026-11-11.md`.
-2. Treble RTL before the 12 Nov freeze, following `docs/goal2_rtl_plan.md`: fixed-point model
-   first, then `rtl/treble_fixed.v` bit-exact against it, then `sim/tb_treble_fixed.v`.
+2. Treble RTL into the build: Aarav wires it in `top.v` and adds `rtl/treble_fixed.v` and
+   `rtl/treble_coefs.mem` to the Vivado script; then listen with the A/B switch on hardware.
 3. Combined mode (music + ANC, switch 11) is a proposal in `docs/goal2_rtl_plan.md` §6. It changes
    A's FSM, mux, top and constraints, and touches B's and C's blocks, so agree it with them first.
 4. Confirm the 32 kbit/s cutoff on a second clip, and choose the gain.
