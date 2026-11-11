@@ -30,6 +30,7 @@ Scores: 12/16 or more gives p < 0.05, so the difference is real at that level.
 |---|---|---|---|---|
 | 11 Nov 2026 | 20 s passages | ABX (`abx.py`) | 14/16 correct, p = 0.0021 | Swarneel; Sony WH-CH520, no EQ |
 | 11 Nov 2026 | 2 s clips (`short_2s`) | Preference (`pref.py`) | enhanced preferred 16/16, p ≈ 0.000015 | Swarneel; Sony WH-CH520, no EQ |
+| 11 Nov 2026 | 2 s clips (`short_2s`) | ABX (`abx.py`) | 14/16 correct, p = 0.0021 (missed 05 and 12) | Swarneel; Sony WH-CH520, no EQ |
 
 Notes from the listener: the difference was clear in most passages, harder in bass-heavy or noisy ones
 (coughs, page turns). 20 s was too long to remember A by the time X played. The listener also found the

@@ -1,7 +1,7 @@
 # HANDOFF — EEE F314 FPGA-Based Audio Enhancement System (ZedBoard)
 <!-- id: doc -->
 
-*Rev 12 — patched 11 Nov 2026, 09:41 IST*
+*Rev 13 — patched 11 Nov 2026, 09:48 IST*
 
 Paste this at the start of a new chat to resume the project; it is self-contained.
 
@@ -27,7 +27,7 @@ NOTE: Goal 2 at 32 kbit/s (cutoff 7.2 kHz). Listening: ABX 14/16 (p = 0.0021) an
 | Goal 2: UART receive, ARM MP3 decoding, PL FIFO | COMPLETED | D; end-to-end lab validation passed 5 Nov |
 | Goal 2: bitrate and cutoff | COMPLETED | Decoder reports the bitrate; 32 kbit/s cutoff 7.2 kHz (40 dB rule); table in test_audio/beethoven5_ogg_knee_table.md; §8 decisions 21–23 |
 | Goal 2: enhancement reference model | IN_PROGRESS | model/goal2/ref.py runs on the 32k decode (float); fixed point and testbench not started; GAIN = 1 not yet chosen (§9 item 27) |
-| Goal 2: listening tests | COMPLETED | ABX 14/16 on 20 s passages (p = 0.0021); blind preference on 2 s clips: enhanced preferred 16/16 (p ≈ 0.000015). One listener, Sony WH-CH520, no EQ, 11 Nov. Log: docs/goal2_observations.md |
+| Goal 2: listening tests | COMPLETED | ABX 14/16 on 20 s passages and 14/16 on 2 s clips (p = 0.0021 each); blind preference on 2 s clips: enhanced 16/16 (p ≈ 0.000015). Misses in bass-heavy passages. One listener, Sony WH-CH520, no EQ, 11 Nov. Log: docs/goal2_observations.md |
 | Goal 2: FIFO path to the board | NOT_STARTED | Vivado block design with the PS and music_fifo_axi, then the ARM feeder (§9 item 26) |
 | Goal 2: treble RTL (treble_fixed) | NOT_STARTED | Plan in docs/goal2_rtl_plan.md (fixed-point model first); before the 12 Nov freeze (§8 decision 28) |
 | Smart-guess float prototype | COMPLETED | Claude's scaffolding, not team code; §5.4 |
@@ -361,7 +361,7 @@ Setup: a 56 kbps MP3 (LAME via libsndfile) of each test clip, mono, 48 kHz, loud
 | 26 | FIFO path to the board: Vivado block design (PS + music_fifo_axi) and the ARM feeder in sw/app | OPEN | Handoff written 9 Nov, kept off the repo; needs the 11 Nov session first |
 | 27 | Enhancement gain (GAIN = 1 for now) | OPEN | Choose from measurement and listening, not from the ANC gains |
 | 28 | Hardware session 11 Nov (T0 to T3) | OPEN | docs/hardware_testing_plan.md; T0 is the laptop pre-flight |
-| 29 | Blind preference test (enhanced vs plain), 2 s clips | CLOSED | Enhanced preferred 16/16, p ≈ 0.000015 (11 Nov; one listener). ABX not repeated on 2 s clips (listener's decision) |
+| 29 | Blind preference test (enhanced vs plain), 2 s clips | CLOSED | Enhanced preferred 16/16, p ≈ 0.000015 (11 Nov; one listener). ABX repeated on 2 s clips: 14/16, same as 20 s, so length did not change accuracy |
 | 30 | Combined mode: music + ANC together (SW 11), SW2 = plain/enhanced | OPEN | Swarneel's proposal, 11 Nov; docs/goal2_rtl_plan.md §6. Changes A's FSM, mux, top and constraints; affects B's FxLMS (music in e(n)) and C's meter (dB valid only in ANC mode). Needs agreement from A, B and C |
 ## 10. Execution plan
 <!-- id: s10 -->

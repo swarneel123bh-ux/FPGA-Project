@@ -16,6 +16,7 @@ Done:
 - ABX test (11 Nov): 14/16 correct on 20 s passages, p = 0.0021 (one listener, Sony WH-CH520,
   no EQ). See `test_audio/ABXtesting/README.md`.
 - Blind preference test (11 Nov, 2 s clips): enhanced preferred 16/16, p ≈ 0.000015.
+- ABX on the 2 s clips (11 Nov): 14/16, p = 0.0021; misses in bass-heavy passages.
   Log: `docs/goal2_observations.md`.
 
 Next:

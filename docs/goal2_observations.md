@@ -20,13 +20,24 @@ Raw files: `test_audio/`. Method details: the README next to each test set.*
 | 9 Nov 2026 | Informal | Synthetic master vs 56k vs 128k | Hi-hats quieter at 56k; audible | Same |
 | 11 Nov 2026 | ABX, blind X (`abx.py`) | 16 × 20 s passages, plain vs enhanced, 32k, level-matched | **14/16 correct, p = 0.0021** | Swarneel; Sony WH-CH520, no EQ |
 | 11 Nov 2026 | Blind preference (`pref.py short_2s`) | 16 × 2 s clips from the same passages | **Enhanced preferred 16/16, p = 1/65,536 ≈ 0.000015** | Same |
+| 11 Nov 2026 | ABX, blind X (`abx.py short_2s`) | Same 16 × 2 s clips | **14/16 correct, p = 0.0021**; missed excerpts 12 and 05 | Same |
 
 Listener notes (11 Nov):
 - The difference was clear in most passages and harder in bass-heavy or noisy ones (coughs, page
   turns). Expected: the added treble is built from the fc/2–fc band, which carries little energy there.
-- 20 s passages were too long to remember A by the time X played. The 2 s preference test had no
-  inconsistent answers, which fits that, but it is a different test; the ABX was not repeated on 2 s
-  clips (listener's decision).
+- 20 s passages felt too long to remember A by the time X played. The ABX on 2 s clips scored the
+  same (14/16), so clip length did not change ABX accuracy.
+- The listener heard all four ABX misses (20 s: excerpts 09 and 13; 2 s: excerpts 05 and 12) as
+  bass-heavy passages.
+
+Check of the bass-heavy explanation (share of energy in the 3.6–7.2 kHz band the enhancement builds
+from, Welch spectrum of the plain clip, 11 Nov):
+- Excerpt 12 has the lowest share of all 16 clips (−42.7 dB on 2 s; −39.2 dB on 20 s): little for the
+  enhancement to work with, which fits the miss.
+- Excerpts 05, 09 and 13 are mid-ranked (9th, 10th and 8th of 16), so band energy does not explain
+  those misses.
+- The music is bass-dominated throughout (energy below 500 Hz is within 4.2 dB of the total in every
+  clip), so "bass-heavy" does not separate the missed clips by that measure.
 
 Limits for the report: one listener, one headset, one piece of music (16 passages of one movement).
 The claim is "preferred over the plain 32 kbit/s file in a blind test", not "as good as the original".
