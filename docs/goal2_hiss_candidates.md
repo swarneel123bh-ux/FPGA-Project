@@ -43,7 +43,12 @@ named below. Listening results are Swarneel's blind tests unless marked otherwis
 
 | 10 | Note-only, persistence gate 5 frames (about 50 ms; notes in 14% of frames) | Blind pair 7 (`NOTE_PERSIST=5`), commit `5f5f18b` | Rejected. Key: A = persist-5, B = loose. Swarneel: enhancement almost non-existent and an odd crackle in A; B preferred, still with strum hiss | Too aggressive: it removes most of the note harmonics |
 
+| 11 | Note-only, persistence gate 3 frames (about 30 ms; notes in 29% of frames) | Blind pair 8 (`NOTE_PERSIST=3`), commit `e282467` | Rejected. Key: A = loose, B = persist-3. Swarneel prefers A: B sounds duller, hiss slightly weaker but so is everything else; crackle still there; strum hiss in both | Persistence gates trade treble for hiss and do not remove the strum hiss |
+
 ## What the candidates show together
+
+- All persistence gates (5 and 3 frames) were rejected: they reduce the level of everything, so they trade quality for a small hiss reduction.
+- Strum hiss remains in every note-based variant (loose, persist-3, persist-5). It is not removed by gating or by partial release.
 
 - Methods that build the treble from the whole tonal source band (rectifier, smoothed rectifier, copy-up)
   all keep the jingle. The jingle survives a harmonic-preserving method, so the tonal MP3 artifacts of the
