@@ -57,6 +57,8 @@ named below. Listening results are Swarneel's blind tests unless marked otherwis
 
 | 17 | Loose note-only vs original, near the end of the song (6:40–7:10) | Blind pair 14 (`NOTE_SRC=s400_30s`), key A = original, B = loose | Swarneel: A (original) has a periodic hiss; B (loose) has a weird continuous hiss. Swarneel: neither is acceptable; B sounds too noisy, like an old FM radio, so A (original) is preferred | New problem: on this passage the loose version has a continuous hiss that the original does not have in the same form. Not yet resolved. Write-up on hold |
 
+| 18 | Passage 3 (6:40–7:10): one-note harmonics (strongest note per frame only) vs original | Blind pair 15 (`NOTE_MAX=1`), commit `e86eb79`. Key: A = original, B = one-note | Swarneel: B is much better. B has a slight periodic hiss, synced with the strums; A (original) has a continuous, never-ending hiss. First candidate to work on passage 3 | Limiting the note count per frame fixes the continuous hiss on the loud, dense passage. Strum-synced hiss remains |
+
 ## What the candidates show together
 
 - All persistence gates (5 and 3 frames) were rejected: they reduce the level of everything, so they trade quality for a small hiss reduction.
