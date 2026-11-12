@@ -51,6 +51,8 @@ named below. Listening results are Swarneel's blind tests unless marked otherwis
 
 | 14 | Note-only, decay law (harmonic level = fundamental × m^-1) instead of copying from the octave below | Blind pair 11 (`NOTE_LAW=decay`), commit `ababdfa` | Rejected. Key: A = decay law, B = loose. Swarneel: decay law has the hiss all through; loose has the hiss only at the strums; both sound like the enhanced version; loose preferred | The copy-from-the-octave-below level keeps the hiss confined to the strums |
 
+| 15 | Note-only, attack shaping (25 ms fade-in of each added partial at onset) | Blind pair 12 (`NOTE_ATTACK_MS=25`), commit `a8eb140` | No audible difference from loose. Hiss at the strums in both | Attack speed is not the lever for the strum hiss |
+
 ## What the candidates show together
 
 - All persistence gates (5 and 3 frames) were rejected: they reduce the level of everything, so they trade quality for a small hiss reduction.
