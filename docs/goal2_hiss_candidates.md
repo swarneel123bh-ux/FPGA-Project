@@ -59,6 +59,8 @@ named below. Listening results are Swarneel's blind tests unless marked otherwis
 
 | 18 | Passage 3 (6:40–7:10): one-note harmonics (strongest note per frame only) vs original | Blind pair 15 (`NOTE_MAX=1`), commit `e86eb79`. Key: A = original, B = one-note | Swarneel: B is much better. B has a slight periodic hiss, synced with the strums; A (original) has a continuous, never-ending hiss. First candidate to work on passage 3 | Limiting the note count per frame fixes the continuous hiss on the loud, dense passage. Strum-synced hiss remains |
 
+| 19 | Passage 3: one-note harmonics with 60 ms two-sided level smoothing (targets the strum-synced hiss) | Blind pair 16 (`NOTE_SMOOTH_MS=60`), commit `4d5dc8e` | Pending listening | Tests whether the added partials following the strum rate causes the strum-synced hiss |
+
 ## What the candidates show together
 
 - All persistence gates (5 and 3 frames) were rejected: they reduce the level of everything, so they trade quality for a small hiss reduction.
