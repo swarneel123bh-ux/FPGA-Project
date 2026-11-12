@@ -153,3 +153,31 @@ and the 48k master.
 proxy by 2.9 dB. It is the first candidate that does not trade quality. But on the 20 s clip at 120 s the
 same threshold made quality worse (full band 18.70 vs 18.18). The gate flips sign between clips, so this
 is not a pass. Only the blind A/B on these 30 s files can decide, and the total quality must hold.
+
+### Strum hiss: where it comes from, and an algorithmic candidate (13 Nov, not team code)
+
+Listening (Swarneel, blind, 30 s from 2:15): plain A has no hiss, enhanced B sounds better overall, but
+has a clear hiss at every guitar strum. The lab gain was judged larger. B was checked against the board's
+fixed-point model (`ref_fixed.py`, tuning 0): it matches to within 1 LSB, so the algorithm is not the
+difference from the lab.
+
+Where the hiss is (B minus A, 150 ms after each strum onset vs between strums, 30 s clip, dB):
+7.2–10 kHz +4.6 dB at onsets; 10–14 kHz +7.1 dB; 14–20 kHz +4.6 dB. The added treble follows the strums.
+
+Candidate (no gate, same chain, fc 7.2 kHz, gain 1, SW5/SW6 down): the rectifier output is smoothed
+by a one-pole low-pass before the high-pass (`model/goal2/exp_rect_smooth.py`).
+
+| Rectifier LPF | LSD full, 30 s | LSD full, 20 s | Added 7.2–20 kHz, 30 s (dB re FS) |
+|---|---|---|---|
+| none (original) | 19.89 | 18.18 | −80.0 |
+| 8 kHz | 15.73 | 14.37 | −83.6 |
+| 4 kHz | 14.69 | 13.50 | −88.3 |
+| **3 kHz** | **14.63** | **13.49** | −90.5 |
+| 2 kHz | 14.89 | 13.78 | −93.8 |
+| 1.5 kHz | 15.28 | 14.15 | −96.3 |
+
+The 3 kHz candidate improves the full-band distance to the 128k reference on both clips, and it is not a
+gate, so it does not trade treble away in loud parts. It also reduces the added energy at strums by about
+10 dB. The distance is a proxy and the reference is itself a re-encode, so only the blind test decides.
+Candidate file: `test_audio/stairway/enhanced_rect3000_s135_30s.wav`; blind pair (original vs rect3000)
+in `build/stairway_blind2/`, key in `key_do_not_open_until_done.json`.
