@@ -169,7 +169,8 @@ def synth(Z, notes):
     return out
 
 def main():
-    p = e.decode(os.path.join(ROOT, "test_audio/stairway/plain_32k_s135_30s.mp3"))
+    SRC = os.environ.get("NOTE_SRC", "s135_30s")
+    p = e.decode(os.path.join(ROOT, f"test_audio/stairway/plain_32k_{SRC}.mp3"))
     f, t, Z = stft(p, fs=FS, nperseg=N, noverlap=N - H, boundary=None, padded=False)
     Mdb = 20 * np.log10(np.abs(Z) + 1e-9)
     grid = f0_grid()
@@ -195,9 +196,9 @@ def main():
     print(f"gain to match original in note frames: {20*np.log10(ratio):.1f} dB")
     y_out = np.clip(np.round(p + add_notes), -32768, 32767).astype("<i2")
     tag = os.environ.get("NOTE_TAG", "notes")
-    cand = os.path.join(ROOT, f"test_audio/stairway/enhanced_{tag}_s135_30s.wav")
+    cand = os.path.join(ROOT, f"test_audio/stairway/enhanced_{tag}_{SRC}.wav")
     wavfile.write(cand, FS, y_out)
-    orig = os.path.join(ROOT, "test_audio/stairway/enhanced_32k_s135_30s.wav")
+    orig = os.path.join(ROOT, f"test_audio/stairway/enhanced_32k_{SRC}.wav")
     d = os.path.join(ROOT, f"build/stairway_blind_{tag}"); os.makedirs(d, exist_ok=True)
     pair = [("original", orig), (tag, cand)]
     random.SystemRandom().shuffle(pair)
