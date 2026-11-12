@@ -259,3 +259,13 @@ Added energy at strum onsets (150 ms after onset) against between strums, dB re 
 
 Reading: the strum-linked added energy is present on the second passage too, with the same pattern, but about
 5 dB lower in absolute terms than on 2:15. Listening (pair 13) has not checked strum hiss yet.
+
+### Step 3 check and strum-synced hiss on passage 3 (6:40–7:10), 13 Nov
+
+- Crossover: the note harmonics are already added only above the 7.2 kHz cutoff. Added energy below 7 kHz
+  is −81 dB re FS (one-note version), so a blend above the cutoff would change nothing. Step 3 is in place.
+- Strum link (one-note version, 51 strum onsets): added energy at strums minus between strums is −0.4 dB at
+  7–10 kHz and −2.5 dB at 10–20 kHz (loose: −0.9 and −3.3). So the strum-synced hiss Swarneel hears in B is not
+  extra added energy at strums.
+- Next checks: (1) listen to the plain 32k file on passage 3 for the same strum-synced hiss, to see whether it is
+  in the source; (2) if plain is clean, check how the added harmonic level follows strum loudness.
