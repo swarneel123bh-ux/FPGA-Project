@@ -35,6 +35,8 @@ named below. Listening results are Swarneel's blind tests unless marked otherwis
 | 5 | Rectifier output smoothed by a 3 kHz one-pole before the high-pass | Model + blind pair 2 (`exp_rect_smooth.py`), commit `b36f0f2`, `193ff00` | Rejected | Full-band LSD improved by about 5 dB, but Swarneel heard it as worse overall and still hissing |
 | 6 | Octave copy-up by phase vocoder (fc/2..fc shifted ×2, level-matched) | Blind pair 3 (`exp_copyup.py`), commit `e4c39c9`, `e7febb3` | Rejected | Original sounds better overall; the metallic jingle is still in both |
 
+| 7 | Note-only harmonics (FFT harmonic sieve, treble only at note partials, copied from the octave below) | Blind pair 4 (`exp_note_harmonics.py`), commit `825f9d6` | **Preferred overall, first positive result**. Key: A = original, B = notes. Swarneel: hiss in both, A has much more, B liked overall | Loose detector: notes in 95% of frames, so gaps are not silent. Next: stricter detector (pair 5) |
+
 ## What the candidates show together
 
 - Methods that build the treble from the whole tonal source band (rectifier, smoothed rectifier, copy-up)
@@ -49,4 +51,4 @@ at the harmonics of those notes (no treble between notes, so no baseline hiss). 
 partial one octave below, which keeps them on the note's harmonic series.
 Status: built as `model/goal2/exp_note_harmonics.py` (30 s clip). Detector: 95% of frames have at least one note
 (loose; between-note gaps are not silent), 2 notes in 36% of frames. Level-matched to the original in note frames
-(−1.8 dB). Blind pair 4 in `build/stairway_blind4/`. Result: pending Swarneel's listening.
+(−1.8 dB). Blind pair 4 in `build/stairway_blind4/`. Result (pair 4): the note-only version is preferred overall; the original has much more hiss. Next: stricter detector.
