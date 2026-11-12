@@ -68,7 +68,8 @@ def detect(Mdb, idx, grid):
         notes.append([(grid[c], idx[c][idx[c] >= 0]) for c in found])
     return notes
 
-DECAY = float(os.environ.get('NOTE_DECAY', 0.0))   # per-frame amplitude release (0 = off, no smoothing)
+DECAY = float(os.environ.get('NOTE_DECAY', 0.0))
+ATTACK_MS = float(os.environ.get('NOTE_ATTACK_MS', 0.0))   # rise time of a partial at onset (0 = instant)   # per-frame amplitude release (0 = off, no smoothing)
 
 PERSIST = int(os.environ.get('NOTE_PERSIST', 1))   # a note must be found in this many consecutive frames
                                                     # (centred; offline, so it uses look-ahead)
@@ -148,7 +149,11 @@ def synth(Z, notes):
                                 ratio_src[d] = (s, m / n)
                 m += 1
         target = dst_amp * active
-        amp_state = np.maximum(target, amp_state * DECAY)      # rise at once, release over frames
+        if ATTACK_MS > 0 and DECAY == 0.0:
+            a_ = 1 - np.exp(-(H / FS) / (ATTACK_MS / 1000.0))   # one-pole rise towards the target
+            amp_state = np.where(target > amp_state, amp_state + (target - amp_state) * a_, target)
+        else:
+            amp_state = np.maximum(target, amp_state * DECAY)  # rise at once, release over frames
         live = amp_state > 1e-3 * max(1.0, np.max(amp_state))
         for d in np.where(live)[0]:
             if d in ratio_src:
