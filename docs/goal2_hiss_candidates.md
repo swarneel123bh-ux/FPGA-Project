@@ -41,6 +41,8 @@ named below. Listening results are Swarneel's blind tests unless marked otherwis
 
 | 9 | Note-only (loose detector) with partial release over frames (NOTE_DECAY 0.7) | Blind pair 6, commit `5effcfc` | No audible difference from loose without release. Crackles gone in both; strum hiss still in both | Release fixed the crackles, but the strum hiss comes from elsewhere: likely strum transients detected as notes |
 
+| 10 | Note-only, persistence gate 5 frames (about 50 ms; notes in 14% of frames) | Blind pair 7 (`NOTE_PERSIST=5`), commit `5f5f18b` | Rejected. Key: A = persist-5, B = loose. Swarneel: enhancement almost non-existent and an odd crackle in A; B preferred, still with strum hiss | Too aggressive: it removes most of the note harmonics |
+
 ## What the candidates show together
 
 - Methods that build the treble from the whole tonal source band (rectifier, smoothed rectifier, copy-up)
