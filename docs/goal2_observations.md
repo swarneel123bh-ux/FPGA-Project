@@ -107,3 +107,30 @@ strings, not the song. Generator: `make_strum_clips.py`.
 - LSD on 2 s of synthetic strums is a weak proxy. The 128k reference is not a true master, and the
   quiet frames here are the ringing decay, not hiss. **Only a blind listening test on strum material
   can say whether the gated version sounds better.**
+
+### Stairway A/B material (13 Nov, `model/goal2/make_stairway_ab.py`, not team code)
+
+Source: the song file (`test_audio/stairway_source.mp3`, git-ignored, 128 kbit/s stereo 44.1 kHz,
+483 s), decoded to 48 kHz mono. **Placeholder window 120–140 s**: the phrase timestamp was not known,
+so the clip was not chosen by ear. Re-cut with `make_stairway_ab.py START LEN` once it is known.
+Reference is the same clip encoded at 128 kbit/s, which is a second lossy pass (not lossless).
+
+Quality judgement (the user's rule: total quality, not hiss alone): distance to the 128k reference,
+full band and above fc, plus added energy in quiet frames as a hiss proxy.
+
+| Variant | LSD full band (dB) | LSD above fc (dB) | Added energy, quiet frames (dB re FS) | Gate open |
+|---|---|---|---|---|
+| Plain 32k | 20.09 | 22.00 | none | — |
+| **V0 original (SW5/SW6 down)** | **18.18** | **20.60** | −89.9 | — |
+| V1 gate −50 dBFS | 18.56 | 20.79 | −90.3 | 63% |
+| V1 gate −40 dBFS | 18.70 | 20.57 | −93.7 | 23% |
+| V1 gate −30 dBFS | 19.60 | 21.40 | −109.3 | 1% |
+| V2 Wiener gate (offline floor) | 18.14 | 20.51 | −90.0 | — |
+
+**Reading:** the gate lowers the hiss proxy only where it also lowers total quality (−40 dBFS:
+hiss −3.8 dB, LSD +0.5 dB). It is a trade, which the user rejects. The Wiener gate is neutral: no hiss
+change, LSD unchanged within 0.04 dB. No variant so far passes the total-quality rule. The hiss
+judgement is still the blind test on the real A/B files.
+
+Files (git-ignored, in `test_audio/stairway/`): `plain_32k_s120_20s.wav`, `enhanced_32k_s120_20s.wav`
+(original enhancement), plus the 48k master and the 32k and 128k MP3s.
