@@ -53,6 +53,8 @@ named below. Listening results are Swarneel's blind tests unless marked otherwis
 
 | 15 | Note-only, attack shaping (25 ms fade-in of each added partial at onset) | Blind pair 12 (`NOTE_ATTACK_MS=25`), commit `a8eb140` | No audible difference from loose. Hiss at the strums in both | Attack speed is not the lever for the strum hiss |
 
+| 16 | Loose note-only vs original, second passage (60–90 s of the song) | Blind pair 13 (`NOTE_SRC=s60_30s`), commit `53365cb` | Loose preferred largely. Key: A = original, B = loose. Original has a continuous underlying hiss (like speakers maxed out); loose does not | Robustness check: the loose version holds on a second passage of the same song |
+
 ## What the candidates show together
 
 - All persistence gates (5 and 3 frames) were rejected: they reduce the level of everything, so they trade quality for a small hiss reduction.
