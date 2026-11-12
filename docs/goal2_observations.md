@@ -134,3 +134,22 @@ judgement is still the blind test on the real A/B files.
 
 Files (git-ignored, in `test_audio/stairway/`): `plain_32k_s120_20s.wav`, `enhanced_32k_s120_20s.wav`
 (original enhancement), plus the 48k master and the 32k and 128k MP3s.
+
+### Stairway 30 s clip at 2:15 (13 Nov, user-supplied timestamp: first strums)
+
+Clip 135–165 s, 30 s, same chain as above (`make_stairway_ab.py 135 30`). Files in `test_audio/stairway/`:
+`plain_32k_s135_30s.wav`, `enhanced_32k_s135_30s.wav` (original enhancement), with the 128k reference
+and the 48k master.
+
+| Variant | LSD full band (dB) | LSD above fc (dB) | Hiss proxy (dB re FS) |
+|---|---|---|---|
+| Plain 32k | 23.22 | 25.44 | none |
+| **Original enhancement** | **19.89** | **22.64** | −88.3 |
+| Gate −40 dBFS (open 47%) | 19.77 | 21.93 | −91.2 |
+| Gate −30 dBFS (open 6%) | 22.00 | 24.07 | −101.5 |
+| Wiener (offline floor) | 19.83 | 22.50 | −88.4 |
+
+**Reading:** on this clip the −40 dBFS gate is slightly better on both LSD measures and lowers the hiss
+proxy by 2.9 dB. It is the first candidate that does not trade quality. But on the 20 s clip at 120 s the
+same threshold made quality worse (full band 18.70 vs 18.18). The gate flips sign between clips, so this
+is not a pass. Only the blind A/B on these 30 s files can decide, and the total quality must hold.
