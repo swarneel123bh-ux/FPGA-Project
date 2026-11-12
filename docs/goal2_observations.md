@@ -41,3 +41,41 @@ from, Welch spectrum of the plain clip, 11 Nov):
 
 Limits for the report: one listener, one headset, one piece of music (16 passages of one movement).
 The claim is "preferred over the plain 32 kbit/s file in a blind test", not "as good as the original".
+
+## 12 Nov 2026: hiss on strummed guitar, and a gate experiment
+
+*Claude's log (not team code). Experiment script: `model/goal2/exp_hiss_gate.py` (float, offline).*
+
+**Problem (from the 12 Nov board run, "Stairway to Heaven"):** with the original tuning (fc 7.2 kHz,
+gain 1, SW5 and SW6 down), the added treble gives jingle and hiss on strummed guitar. The 12 Nov
+retune (SW6 up) reduces it but dulls the voice. Swarneel's blind-test result (12 Nov): listeners prefer
+SW2 and SW3 up (−6 and −12 dB, −18 dB volume), SW4, SW5 and SW6 down (original parameters). So the
+enhancement stays at the original parameters and the algorithm's own noise is removed.
+
+**Blind-test setting for the report:** SW2 up, SW3 up, SW4 down, SW5 down, SW6 down.
+
+**Experiment (Beethoven 20 s, 32k vs 128k reference, original parameters):**
+
+| Variant | LSD above fc (dB, lower = closer to 128k) | Added energy 7.2–20 kHz in quietest 20% of frames (dB re FS) |
+|---|---|---|
+| Plain 32k | 22.22 | −200 (nothing added) |
+| V0 original | 18.56 | −90.6 |
+| V1 envelope gate, T = −70 dBFS (open 96%) | 18.62 | −90.6 |
+| V1 envelope gate, T = −60 dBFS (open 90%) | 18.72 | −90.7 |
+| V1 envelope gate, T = −50 dBFS (open 74%) | 18.74 | −91.0 |
+| V1 envelope gate, T = −40 dBFS (open 39%) | 18.23 | −95.2 |
+| V2 Wiener gate on added treble (offline floor) | 18.63 | −90.7 |
+
+**Reading:**
+- The original enhancement closes about 3.7 dB of the LSD gap to the 128k decode, on this clip.
+- A gate with a fixed threshold removes hiss in quiet frames only at a threshold that also closes
+  39% of the time. At that setting the gate removes about 4.6 dB of added energy in the quiet frames
+  and lowers LSD slightly (18.23), so there is a small gain without a loss of treble in loud parts
+  on this clip. At the milder thresholds it does nothing useful.
+- The Wiener gate does nothing measurable here. The noise floor estimate is offline and per-bin
+  (10th percentile over the file), so this is an upper bound on what a real-time version could do.
+- **Not tested:** strums. This clip is orchestral and has no strum passage. The hiss in the 12 Nov
+  report is the case that matters. Need a strum recording (the Stairway excerpt, or another clip with
+  guitar strums) before any of this is judged for the hiss problem.
+- LSD and the gap metric are objective proxies, defined in `exp_hiss_gate.py`. They are not listening
+  results; a blind test on strum material is the judge.
