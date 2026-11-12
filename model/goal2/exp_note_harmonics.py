@@ -68,6 +68,8 @@ def detect(Mdb, idx, grid):
         notes.append([(grid[c], idx[c][idx[c] >= 0]) for c in found])
     return notes
 
+DECAY = float(os.environ.get('NOTE_DECAY', 0.0))   # per-frame amplitude release (0 = off, no smoothing)
+
 def synth(Z, notes):
     """Phase-vocoder synthesis of the added harmonics, mapping dst bins m*f0 from source n*f0."""
     K, T = Z.shape
@@ -77,6 +79,7 @@ def synth(Z, notes):
     prev = np.angle(Z[:, 0])
     ph[:] = prev
     active_prev = np.zeros(K, bool)
+    amp_state = np.zeros(K)
     for t in range(T):
         cur = np.angle(Z[:, t])
         if t > 0:
@@ -105,14 +108,20 @@ def synth(Z, notes):
                                 dst_amp[d] = max(dst_amp[d], np.abs(Z[sb, t]))
                                 ratio_src[d] = (s, m / n)
                 m += 1
-        for d in np.where(active)[0]:
-            s, r = ratio_src[d]
+        target = dst_amp * active
+        amp_state = np.maximum(target, amp_state * DECAY)      # rise at once, release over frames
+        live = amp_state > 1e-3 * max(1.0, np.max(amp_state))
+        for d in np.where(live)[0]:
+            if d in ratio_src:
+                s, r = ratio_src[d]
+            else:
+                s, r = d, 1.0                                   # released bin: keep its phase track
             if not active_prev[d]:
                 ph[d] = r * cur[s]                          # lock new partial to its source phase
             else:
                 ph[d] = ph[d] + r * w_all[s]
-            out[d, t] = dst_amp[d] * np.exp(1j * ph[d])
-        active_prev = active
+            out[d, t] = amp_state[d] * np.exp(1j * ph[d])
+        active_prev = live
     return out
 
 def main():
@@ -145,7 +154,7 @@ def main():
     cand = os.path.join(ROOT, f"test_audio/stairway/enhanced_{tag}_s135_30s.wav")
     wavfile.write(cand, FS, y_out)
     orig = os.path.join(ROOT, "test_audio/stairway/enhanced_32k_s135_30s.wav")
-    d = os.path.join(ROOT, "build/stairway_blind4"); os.makedirs(d, exist_ok=True)
+    d = os.path.join(ROOT, f"build/stairway_blind_{tag}"); os.makedirs(d, exist_ok=True)
     pair = [("original", orig), (tag, cand)]
     random.SystemRandom().shuffle(pair)
     shutil.copy(pair[0][1], os.path.join(d, "A.wav")); shutil.copy(pair[1][1], os.path.join(d, "B.wav"))
