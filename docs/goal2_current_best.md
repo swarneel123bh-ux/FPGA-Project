@@ -57,3 +57,49 @@ Rejected candidates, with evidence and verdicts, are in `docs/goal2_hiss_candida
 - Code: `model/goal2/exp_note_harmonics.py` (current best, default settings), `model/goal2/exp_hiss_gate.py`,
   `model/goal2/exp_copyup.py`, `model/goal2/exp_rect_smooth.py`, `model/goal2/make_stairway_ab.py`.
 - Audio (git-ignored): `test_audio/stairway/` (plain 32k, 128k reference and enhanced files for both passages).
+
+## Update: third passage (6:40–7:10), pair 14
+
+Swarneel's listening: the original (A) has a periodic hiss; the loose version (B) has a continuous hiss that
+sounds like an old FM radio. Neither is acceptable, and the original is preferred because B is too noisy.
+
+So the "current best" claim holds for passages 1 and 2 only. On passage 3 the loose version is worse than
+the original. Likely cause (to check, not yet tested): on this passage the detector finds notes in 96% of
+frames and two notes in about 72% of frames, so it adds harmonics almost everywhere, including between notes.
+
+Status: the loose version is the best of the note-based candidates on two passages, and it fails on a third.
+It is not yet a general improvement.
+
+## Literature check (13 Nov)
+
+Sources were searched online; these are the closest matches. None has been tested here.
+
+- **Spectral band replication (SBR)**: rebuilds the high band by copying the coded low band and shaping it with
+  a small amount of side information (envelopes, noise levels). It is the standard in HE-AAC and mp3PRO.
+  Source: [Spectral band replication, Wikipedia](https://wikipedia.com/wiki/Spectral_Band_Replication).
+  Relevance: our method copies partials but has no side information, so the detector must replace it. The
+  smeared, "watery" failure mode of aggressive SBR is similar to the artefacts we hear.
+- **Neural spectral band generation** (n-SBG): plugs a neural bandwidth-extension model into a traditional
+  codec pipeline. Source: [arXiv 2506.06732](https://arxiv.org/html/2506.06732v1).
+  Relevance: too heavy for the deadline and hard to explain in the viva (team rule), so noted only.
+- **Audio super-resolution with neural networks** (Kuleshov et al., 2017): feedforward model that reconstructs
+  high-band content from a down-sampled input, designed to run in real time. Source: [arXiv 1708.00853](https://arxiv.org/pdf/1708.00853).
+  Relevance: the same trade-off as above: needs training data and a fixed model.
+- **Vocos-based bandwidth extension** (2026): 8–48 kHz input, blends the original low band with generated highs
+  through a crossover-style refiner, reports real-time factors on a GPU and an 8-core CPU. Source:
+  [arXiv 2603.07285](https://arxiv.org/pdf/2603.07285).
+  Relevance: the blending step (keep the coded band, add only generated highs) matches our level-matching idea.
+- **BAE-Net** (streaming speech bandwidth extension, 500 K parameters): [arXiv 2312.13722](https://arxiv.org/pdf/2312.13722).
+  Speech only; not tested for music.
+- **AERO** (spectral-domain prediction of the full band): [arXiv 2211.12232](https://arxiv.org/pdf/2211.12232.pdf).
+
+What is most likely to help next, from this:
+
+1. **Find out why passage 3 fails** before adding anything: check whether the detector's notes are wrong on this
+   passage (for example, detecting harmonic series in dense or noisy music). This is cheap.
+2. **Gate the detector by its own confidence** (fewer harmonics added when notes are uncertain), not by level.
+   This is different from the gates we rejected, which cut treble regardless of the notes.
+3. A **blended crossover** like the Vocos refiner: keep the coded band exactly as it is and add the new treble
+   only above the cutoff, so the original is never altered.
+
+No code was written this turn.
