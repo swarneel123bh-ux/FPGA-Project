@@ -35,7 +35,9 @@ named below. Listening results are Swarneel's blind tests unless marked otherwis
 | 5 | Rectifier output smoothed by a 3 kHz one-pole before the high-pass | Model + blind pair 2 (`exp_rect_smooth.py`), commit `b36f0f2`, `193ff00` | Rejected | Full-band LSD improved by about 5 dB, but Swarneel heard it as worse overall and still hissing |
 | 6 | Octave copy-up by phase vocoder (fc/2..fc shifted ×2, level-matched) | Blind pair 3 (`exp_copyup.py`), commit `e4c39c9`, `e7febb3` | Rejected | Original sounds better overall; the metallic jingle is still in both |
 
-| 7 | Note-only harmonics (FFT harmonic sieve, treble only at note partials, copied from the octave below) | Blind pair 4 (`exp_note_harmonics.py`), commit `825f9d6` | **Preferred overall, first positive result**. Key: A = original, B = notes. Swarneel: hiss in both, A has much more, B liked overall | Loose detector: notes in 95% of frames, so gaps are not silent. Next: stricter detector (pair 5) |
+| 7 | Note-only harmonics (FFT harmonic sieve, treble only at note partials, copied from the octave below) | Blind pair 4 (`exp_note_harmonics.py`), commit `825f9d6` | **Preferred overall, first positive result**. Key: A = original, B = notes. Swarneel: hiss in both, A has much more, B liked overall | Loose detector: notes in 95% of frames, so gaps are not silent. Next: stricter detector (pair 5), rejected (row 8) |
+
+| 8 | Note-only harmonics, strict detector (THR 15 dB, MINP 6; notes in 9% of frames) | Blind pair 5 (`NOTE_THR=15 NOTE_MINP=6`), commit `f138081` | Rejected. Key: A = strict, B = loose. Swarneel: almost no different from the non-enhanced version, plus strum hisses and random crackles mid-clip. Loose preferred | Too sparse: most of the enhancement is gone. The crackles suggest partials switching on and off abruptly between frames |
 
 ## What the candidates show together
 
