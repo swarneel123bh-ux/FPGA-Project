@@ -324,3 +324,12 @@ Reading: 64 kbit/s is indistinguishable from the original on this passage. 48 kb
 Link limit: 230,400 baud gives 23,040 bytes/s, so 128 kbit/s (16,000 bytes/s) fits with 1.44x headroom. Not yet
 checked on the board (decoder at 128 kbit/s, feed rate and buffer). A 56 kbit/s source is not in this test; its
 quality is unknown until it is scored.
+
+### 56 kbit/s source, passage 3 (13 Nov)
+
+Encoded from the same master at 56 kbit/s mono 48 kHz and sent for grading against the original
+(`build/bitrate_set_p3/br56_passage3.wav`, not blind: the reference is known). Measured cutoff of the 56k decode
+(mean spectrum, 1 kHz bands): full level up to about 14–15 kHz, then about 20 dB down at 15–16 kHz, with the
+master at about 19 dB there. So a 56k source already carries 7.2–15 kHz; an enhancement from it could only add
+roughly 15–20 kHz. The 32k-tuned method (fc 7.2 kHz) does not fit this case, so any 56k enhancement needs a
+different cutoff and is not built yet.
