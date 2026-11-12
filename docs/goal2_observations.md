@@ -220,3 +220,22 @@ Consequence: the jingle survives a harmonic-preserving method. So the rectifier'
 the only cause. The source band is tonal (MP3 artifacts), and any method that builds treble from it copies
 that tonality up. The next experiment needs to limit what is copied from the tonal artifacts, not change
 the method. Still open.
+
+### Where the strum hiss comes from (13 Nov, analysis of the loose note-harmonic candidate)
+
+Strum windows = 150 ms after each detected strum onset (50 onsets, 30 s clip). Added energy = candidate minus plain.
+
+- Added energy at strums is mostly OFF the note harmonics: 7.2–10 kHz is about 14 dB louder at strums than
+  between strums on the off-harmonic bins (−38 vs −52 dB); only 14–16% of the added 7.2–20 kHz energy sits within
+  ±1 bin of a detected harmonic.
+- The synthesis itself produces this, before any filtering: with ±2 bins around the harmonics, 50% of the
+  synthesised energy is on harmonic bins (±3 bins: 62%). So the phase-vocoder synthesis spreads energy
+  off-harmonic, and most of that spread happens at strum attacks, where partials change amplitude and
+  frequency fastest.
+- The original chain's added energy is also off-harmonic at strums (by construction), so this is not specific
+  to the note method. The note method adds fewer off-harmonic components in gaps (gap level −98 dB), but at
+  strums its spreading is the likely hiss.
+
+Working hypothesis: strum hiss = spectral splatter from fast amplitude/frequency change of the synthesised
+partials at attacks. Test next: a longer analysis window (or amplitude smoothing across frames) for the
+synthesis, and check whether the off-harmonic energy at strums falls. Not yet tested by ear.
