@@ -2,6 +2,8 @@
 
 ZedBoard (Zynq-7020) project: goal 1 is two-microphone feedforward FxLMS active noise
 cancellation in the PL; goal 2 is treble restoration of low-bitrate MP3 decoded on the ARM.
+**Since 11 Nov 2026 goal 2 (enhancement) is the primary goal and ANC is secondary** (ANC hardware
+unavailable). Demo build: `rtl/enh_top.v`, `scripts/build_enh.tcl`, `docs/enh_build.md`.
 Vivado 2020 / Vitis 2020.x.
 
 **The team plan is in `docs/plan/`:** `README.md` (schedule, block interfaces, ANC algorithm,

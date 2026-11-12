@@ -6,7 +6,8 @@
 //
 // Vectors come from model/goal2/ref_fixed.py (run it first):
 //   sim/vectors/treble_in.hex   input samples, s24
-//   sim/vectors/treble_out.hex  expected music, s24, enh_en = 1
+//   sim/vectors/treble_ctl.hex  per-sample switches: bit 0 tune_sel (SW6), bit 1 att12 (SW5)
+//   sim/vectors/treble_out.hex  expected music, s24, enh_en = 1, with those switches
 //   rtl/treble_coefs.mem        coefficient ROM the DUT loads
 //
 // music_raw is driven the way music_fifo drives it: valid 2 clocks after sample_tick. The output
@@ -22,6 +23,8 @@
 //   5. music holds its value from the end of each run to the next tick; each run finishes in
 //      fewer than RUN_MAX clocks.
 //   6. The first samples again at the real 48 kHz spacing (2,083 clocks).
+//   Checks 1 and 2 run with the switch pattern from treble_ctl.hex (both tunings, -12 dB, and
+//   changes mid-signal); checks 4 and 6 replay the start, where both switches are down.
 //
 // Run:  ./sim/run_treble.sh      (or the two commands at its bottom)
 
@@ -41,17 +44,20 @@ reg rst = 1;
 reg sample_tick = 0;
 reg signed [23:0] music_raw = 0;
 reg enh_en = 1;
+reg tune_sel = 0, att12 = 0;
 wire signed [23:0] music;
 
 treble_fixed #(.COEF_FILE("rtl/treble_coefs.mem")) uut (
 	.clk(clk), .rst(rst), .sample_tick(sample_tick),
-	.music_raw(music_raw), .music(music), .enh_en(enh_en)
+	.music_raw(music_raw), .music(music), .enh_en(enh_en),
+	.tune_sel(tune_sel), .att12(att12)
 );
 
 always #5 clk = ~clk;
 
 reg [23:0] vin  [0:MAXV-1];
 reg [23:0] vexp [0:MAXV-1];
+reg [3:0]  vctl [0:MAXV-1];
 integer nvec;
 
 integer errors = 0, checks = 0, hold_errors = 0, late = 0, nsat = 0;
@@ -106,6 +112,8 @@ task automatic play(input integer n, input integer period, input integer use_off
 	begin
 		for (k = 0; k < n; k = k + 1) begin
 			enh_en <= (use_off_window && k >= OFF_LO && k < OFF_HI) ? 1'b0 : 1'b1;
+			tune_sel <= vctl[k][0];					// set before the tick, like enh_en
+			att12    <= vctl[k][1];
 			tick(vin[k], period);					// music now holds the result for sample k
 			e = (use_off_window && k >= OFF_LO && k < OFF_HI) ? vin[k] : vexp[k];
 			check(k, e, what);
@@ -127,6 +135,7 @@ integer fd;
 initial begin
 	$readmemh("sim/vectors/treble_in.hex",  vin);
 	$readmemh("sim/vectors/treble_out.hex", vexp);
+	$readmemh("sim/vectors/treble_ctl.hex", vctl);
 	// count vectors (file length): stop at the first unwritten entry
 	nvec = 0;
 	while (nvec < MAXV && vin[nvec] !== 24'bx) nvec = nvec + 1;

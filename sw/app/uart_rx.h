@@ -6,4 +6,5 @@ void uart_rx_start(u8 *buf, u32 n);
 int  uart_rx_done(void);
 u32  uart_rx_count(void);
 u32  uart_rx_errors(void);
+u32  uart_rx_progress(void);   /* live byte count during a transfer [Claude, 12 Nov] */
 #endif

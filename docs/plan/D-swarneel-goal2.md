@@ -2,8 +2,9 @@
 
 Read [README.md](README.md) first (goals, schedule, interface table §5, agent rules §9).
 
-**Your role:** goal 2 is best-effort; goal 1 comes first for the team. Your path is independent
-of ANC until week 2, when it plugs into A's output mux as `music` (MUSIC state).
+**Your role:** since 11 Nov 2026 goal 2 is the team's **primary** goal (ANC is secondary; its
+hardware is not available). The demo runs the enhancement build (`rtl/enh_top.v`,
+`docs/enh_build.md`), which does not use A's mode FSM or output mux.
 
 ## Status and next steps (updated 11 Nov 2026)
 

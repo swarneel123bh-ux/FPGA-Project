@@ -12,6 +12,13 @@ Vivado 2020 / Vitis 2020.x.
 | C | Samarth Shreepad Dixit | LFSR, secondary-path identification, noise meter and OLED, divergence monitor, acoustic rig | [C-samarth-pathid-meter.md](C-samarth-pathid-meter.md) |
 | D | Swarneel Bhattacharjee | Goal 2: MP3 over UART, ARM decoding, PL FIFO, treble restoration | [D-swarneel-goal2.md](D-swarneel-goal2.md) |
 
+**Priority change (11 Nov 2026, team decision): goal 2, compressed-audio enhancement, is now the
+primary goal; goal 1, ANC, is secondary.** ANC hardware (second mic, rig) is not available, so the
+demo build is the enhancement build: `rtl/enh_top.v`, built by `scripts/build_enh.tcl`; how to run it
+is in [`docs/enh_build.md`](../enh_build.md). ANC work continues once enhancement works on the
+board. The names "goal 1" (ANC) and "goal 2" (enhancement) are kept, because files and branches use
+them.
+
 Status on 6 Nov 2026: existing B, C and D work was validated on 5 Nov, including the goal-2 lab
 run. Aarav's week-1 codec/I2S scaffolding and supplied simulations were merged into `main` on
 6 Nov; Vivado generation and audio-path hardware validation remain pending. The schedule below
@@ -22,11 +29,11 @@ tell Swarneel if it is wrong.
 
 ## 1. What we are building
 
-1. **Goal 1 (main, graded expectation): active noise cancellation.** Cancel a steady 100–500 Hz
+1. **Goal 1 (secondary since 11 Nov; was the main goal): active noise cancellation.** Cancel a steady 100–500 Hz
    tone (hum, fan) at one point inside an over-ear headphone cup by playing anti-noise through
    the headphone driver. Feedforward FxLMS in the PL: a *reference mic* outside the cup hears the
    noise first, an *error mic* inside the cup hears what is left.
-2. **Goal 2 (best-effort): compressed-audio enhancement.** A low-bitrate MP3 is sent over the
+2. **Goal 2 (primary since 11 Nov; was best-effort): compressed-audio enhancement.** A low-bitrate MP3 is sent over the
    USB-UART, decoded on the ARM, streamed to the PL, which regenerates the treble the encoder cut.
 
 Course framework mapping: mics (input) → ADAU1761 codec over I2S (FPGA interface) → FxLMS /

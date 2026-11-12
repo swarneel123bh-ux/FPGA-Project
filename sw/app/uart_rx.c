@@ -151,3 +151,11 @@ int uart_rx_done(void) { return rx_done; }
 /* Bytes received so far and RX error events since the last uart_rx_start(). [added by Claude] */
 u32 uart_rx_count(void) { return TotalReceivedCount; }
 u32 uart_rx_errors(void) { return TotalErrorCount; }
+
+/* Bytes received so far, live: the driver's receive buffer counts every byte in the ISR, while
+   TotalReceivedCount above only changes on timeout/complete/error events (so it stays 0 during
+   a continuous transfer). Used by streaming playback. [added by Claude, 12 Nov] */
+u32 uart_rx_progress(void) {
+	volatile XUartPsBuffer *b = &UartInstancePtr->ReceiveBuffer;
+	return b->RequestedBytes - b->RemainingBytes;
+}

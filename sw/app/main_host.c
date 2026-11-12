@@ -13,6 +13,8 @@
 		#include "xtime_l.h"	/* Vitis 2020.x */
 	#endif
 	#include "uart_rx.h"
+	#include "pl_feed.h"	/* [Claude, 11 Nov] PL playback */
+	#include "stream_play.h"	/* [Claude, 12 Nov] streaming playback */
 #endif
 
 #define ERR_FILE_LEN_MISMATCH    1
@@ -116,7 +118,62 @@ int main(int argc, char **argv) {
 
 	// Get the rest: payload and trailing checksum in one receive
 	uart_rx_start(RecvBuffer, (u32)(len + TRAILERLEN));
-	if (wait_rx(RX_TIMEOUT_S) != 0) {
+
+#ifndef NO_STREAM
+	/* [Claude, 12 Nov] Streaming: decode while the file arrives and start playing after about
+	   0.7 s instead of after the whole transfer (sw/app/stream_play.c, sim/run_stream.sh).
+	   Build with NO_STREAM defined to get the receive-everything-first path below. */
+	{
+		stream_result_t sr;
+		pcm_buffer = (int16_t *)PCM_BUF_ADDR;
+		pcm_cap = len * 48 + MINIMP3_MAX_SAMPLES_PER_FRAME;
+		int st = stream_play(&pl_stream_io, RecvBuffer, (uint32_t)len, pcm_buffer, pcm_cap,
+			230400u / 10u, 5000u, &sr);
+		if (st == STREAM_RX_TIMEOUT) {
+			xil_printf("[FAIL] payload timeout, got %d of %d bytes\r\n",
+				(int)sr.rx_bytes, (int)(len + TRAILERLEN));
+			return ERR_RX_TIMEOUT;
+		}
+		if (st != STREAM_OK) {
+			xil_printf("[FAIL] decode() returned SIG_DECODE_FAIL\r\n");
+			return ERR_SIG_DECODE_FAIL;
+		}
+
+		uint32_t expected = read_le32(RecvBuffer + len);
+		uint32_t actual = fnv1a(RecvBuffer, len);
+		xil_printf("rx: %d bytes, %d uart errors, fnv 0x%08x (sender 0x%08x)\r\n",
+			(int)len, (int)uart_rx_errors(), actual, expected);
+		if (actual != expected) {
+			xil_printf("[FAIL] checksum mismatch\r\n");
+			return ERR_CHECKSUM_MISMATCH;
+		}
+
+		DecodeResult_t *r = &sr.res;
+		u32 audio_ms = r->sample_rate ? (u32)((u64)r->samples_per_channel * 1000 / r->sample_rate) : 0;
+		u32 decode_ms = sr.decode_us / 1000u;
+		xil_printf("res.channel_count = %d\r\n",       (int)r->channel_count);
+		xil_printf("res.frame_count = %d\r\n",         (int)r->frame_count);
+		xil_printf("res.sample_rate = %d\r\n",         (int)r->sample_rate);
+		xil_printf("res.samples_per_channel = %d\r\n", (int)r->samples_per_channel);
+		xil_printf("res.checksum = 0x%08x\r\n",        r->checksum);
+		xil_printf("res.bitrate = %d\r\n",             (int)r->bitrate);
+		if (r->sample_rate != 48000 || r->channel_count != 1) {
+			xil_printf("[FAIL] need 48 kHz mono, got %d Hz %d ch (send with --to48k)\r\n",
+				(int)r->sample_rate, (int)r->channel_count);
+			return ERR_BAD_FORMAT;
+		}
+		xil_printf("stream: first audio %d ms after the header\r\n", (int)(sr.first_audio_us / 1000u));
+		xil_printf("decode %d ms for %d ms of audio (x%d real time)\r\n",
+			(int)decode_ms, (int)audio_ms, decode_ms ? (int)(audio_ms / decode_ms) : 0);
+
+		pl_play_loop_from(pcm_buffer, (uint32_t)r->samples_per_channel, sr.play_pos);
+		return 0;
+	}
+#endif
+
+	/* [Claude, 12 Nov] 230,400 baud moves about 23 KB/s, so a full song (~2 MB) takes ~90 s:
+	   allow 30 s plus 1 s per 20 KB instead of a flat 30 s. */
+	if (wait_rx(RX_TIMEOUT_S + (u32)(len / 20000u)) != 0) {
 		xil_printf("[FAIL] payload timeout, got %d of %d bytes\r\n",
 			(int)uart_rx_count(), (int)(len + TRAILERLEN));
 		return ERR_RX_TIMEOUT;
@@ -226,6 +283,9 @@ int main(int argc, char **argv) {
 
 	xil_printf("decode %d ms for %d ms of audio (x%d real time)\r\n",
 		(int)decode_ms, (int)audio_ms, decode_ms ? (int)(audio_ms / decode_ms) : 0);
+
+	/* [Claude, 11 Nov] Play through the PL (FIFO -> treble_fixed -> headphones). Does not return. */
+	pl_play_loop(pcm_buffer, (uint32_t)res.samples_per_channel);
 #else
 	printf("res.channel_count = %lu\n",       (unsigned long)res.channel_count);
 	printf("res.frame_count = %lu\n",         (unsigned long)res.frame_count);

@@ -6,8 +6,25 @@
 #
 # Same chain as model/goal2/ref.py (float reference), with every number an integer:
 #
-#   x (s24) -> band-pass fc/2..fc (4 sections) -> |.| -> high-pass fc (4) -> low-pass 20 kHz (4)
-#           -> enh;   out = sat24(x + enh)        (GAIN = 1)
+#   x (s24) -> band-pass fc/2..fc (4 sections) -> |.| -> high-pass fc (4) -> 4 more sections
+#           -> enh;   enh >>= 2 if SW5 (-12 dB);   out = sat24(x + enh)
+#
+# Two tunings in one ROM (24 sections), chosen live with SW6 (12 Nov, Swarneel's choice after
+# listening): both keep 12 sections and |.| after section 3, so the datapath is the same.
+#   tuning 0 (SW6 down, default)  the original: fc 7.2 kHz, low-pass 20 kHz order 8 (4 sections),
+#                                 gain 1. Won the 11 Nov blind tests; voice brighter, strums hiss.
+#   tuning 1 (SW6 up)             the retune below: less hiss on strums, duller voice.
+# SW5 up: the added treble is shifted right by 2 (-12 dB) in either tuning.
+#
+# Tuning 1, 12 Nov 2026 (after the Stairway to Heaven board test: jingle/hiss on strummed guitar):
+#   FC 7.2 -> 9 kHz   the 32 kbit/s encodes keep real content up to about 9 kHz (Stairway decode:
+#                     nothing above 9 kHz; Beethoven 20 dB-down point 10 kHz), so 7.2 kHz added
+#                     treble on top of treble that was still there.
+#   Shelf -6 dB above 11 kHz   the added treble was about 5 dB too strong at 12-16 kHz.
+#   GAIN -8 dB        level match to the 128k source on the acoustic passages (intro -6.5 dB,
+#                     strums -8.2 dB). The rock section wanted +4.6 dB: a fixed gain cannot suit
+#                     both, so it errs on the quiet side (no jingle, less treble in loud parts).
+#   The shelf (with GAIN folded into its b coefficients) replaces the 4th low-pass section.
 #
 # Fixed-point decisions (docs/goal2_rtl_plan.md section 3):
 #   Input / output   s24, two's complement. Music arrives as int16 << 8 (the FIFO feeder).
@@ -16,7 +33,8 @@
 #   Internal samples 32-bit signed: 4 guard bits above s24 (16x headroom) and 4 fraction
 #                    bits below its LSB (x << 4 on entry). With 0 fraction bits the rounding
 #                    noise was only 49 dB below the added treble; 4 bits gives the 60 dB target.
-#                    Worst-case chain gain (L1 norm) is about 1.86 * 2.45 * 2.99 = 13.6 < 16,
+#                    Worst-case chain gain (L1 norm) is about 1.86 * 2.45 * 2.99 = 13.6 < 16
+#                    for tuning 0 and 1.83 * 2.34 * 0.70 = 3.0 for tuning 1,
 #                    so the saturations below never fire for in-range input; they are a guard.
 #   Section          Direct Form I. acc = b0*x0 + b1*x1 + b2*x2 + (-a1)*y1 + (-a2)*y2,
 #                    exact in a 60-bit accumulator (32x25 -> 57-bit products, 5 terms).
@@ -25,12 +43,18 @@
 #                    At the end of the chain: enh = (v + 8) >> 4, back to the s24 LSB.
 #   Saturation       Each section output (32 bit), after |.| (|-2^31| -> 2^31-1), final sum (24 bit).
 #   enh_en = 0       out = x exactly; the filters keep running so switching back is click-free.
+#   SW6 (tuning)     both coefficient sets share one filter state, so a switch gives a short
+#                    transient while the state settles (modelled exactly here). Sampled once per
+#                    sample, at the start of the run, so a run never mixes the two sets.
+#   SW5 (-12 dB)     enh >> 2 (arithmetic, rounds towards -inf), applied before the final sum.
 #
 # Usage:
 #   .venv/bin/python model/goal2/ref_fixed.py              # checks + vectors + coefficient ROM
 #   .venv/bin/python model/goal2/ref_fixed.py --full       # also the 20 s float-vs-fixed check
-# Writes: rtl/treble_coefs.mem, sim/vectors/treble_in.hex, sim/vectors/treble_out.hex,
-#         build/enhanced_fixed_32k.wav (for listening).
+# Writes: rtl/treble_coefs.mem (120 words: tuning 0 then tuning 1), sim/vectors/treble_in.hex,
+#         treble_ctl.hex (per-sample switches: bit 0 SW6 tuning, bit 1 SW5 -12 dB),
+#         treble_out.hex (with those switches), treble_out_default.hex (switches down, for
+#         tb_enh_core), build/enhanced_fixed_32k.wav (for listening).
 
 import os
 import subprocess
@@ -43,27 +67,57 @@ from scipy.io import wavfile
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 FS = 48000
-FC = 7200            # 32 kbit/s cutoff (test_audio/beethoven5_ogg_knee_table.md)
+FC0 = 7200           # tuning 0: 32 kbit/s cutoff (test_audio/beethoven5_ogg_knee_table.md)
+FC = 9000            # tuning 1: 32 kbit/s cutoff as measured on 12 Nov (see header)
 LIMIT_HZ = 20000
-FILTER_ORDER = 8     # as ref.py: band-pass order 4 (-> 8 poles), high/low-pass order 8
+FILTER_ORDER = 8     # as ref.py: band-pass order 4 (-> 8 poles), high-pass order 8
+LP_ORDER = 6         # tuning 1 low-pass 20 kHz: 3 sections (the 4th section is the shelf)
+SHELF_HZ = 11000     # high-shelf EQ corner
+SHELF_DB = -6.0      # high-shelf EQ gain above SHELF_HZ
+GAIN_DB = -8.0       # tuning 1 gain of the added treble (folded into the shelf section)
+ATT_SHIFT = 2        # SW5: enh >> 2 = -12 dB
 
 COEF_W = 25          # coefficient width
 COEF_FRAC = 22       # fractional bits (Q2.22)
 DATA_W = 32          # internal sample width
 DATA_FRAC = 4        # internal fraction bits below the s24 LSB
 OUT_W = 24           # block-boundary width
-N_SECT = 12
+N_SECT = 12          # sections per tuning
+N_TUNE = 2
 ABS_AFTER = 3        # |.| is applied to the output of section 3 (end of the band-pass)
 
 MP3 = os.path.join(ROOT, "test_audio", "beethoven5_ogg_32k.mp3")
 
 
-def design_sos(fc=FC):
-    """The three float filters of ref.py, stacked as 12 sections."""
+def high_shelf(f0, gain_db):
+    """RBJ audio-EQ-cookbook high shelf (slope 1) as one second-order section."""
+    A = 10 ** (gain_db / 40)
+    w = 2 * np.pi * f0 / FS
+    c, al = np.cos(w), np.sin(w) / 2 * np.sqrt(2)
+    b0 = A * ((A + 1) + (A - 1) * c + 2 * np.sqrt(A) * al)
+    b1 = -2 * A * ((A - 1) + (A + 1) * c)
+    b2 = A * ((A + 1) + (A - 1) * c - 2 * np.sqrt(A) * al)
+    a0 = (A + 1) - (A - 1) * c + 2 * np.sqrt(A) * al
+    a1 = 2 * ((A - 1) - (A + 1) * c)
+    a2 = (A + 1) - (A - 1) * c - 2 * np.sqrt(A) * al
+    return np.array([[b0 / a0, b1 / a0, b2 / a0, 1.0, a1 / a0, a2 / a0]])
+
+
+def design_sos(tuning=1):
+    """Tuning 0: band-pass (4), high-pass (4), low-pass (4) at fc 7.2 kHz, gain 1.
+    Tuning 1: band-pass (4), high-pass (4), low-pass (3) + shelf x GAIN (1) at fc 9 kHz."""
+    if tuning == 0:
+        bp = butter(FILTER_ORDER // 2, [FC0 / 2, FC0], btype="bandpass", fs=FS, output="sos")
+        hp = butter(FILTER_ORDER, FC0, btype="highpass", fs=FS, output="sos")
+        lp = butter(FILTER_ORDER, LIMIT_HZ, btype="lowpass", fs=FS, output="sos")
+        return bp, hp, lp
+    fc = FC
     bp = butter(FILTER_ORDER // 2, [fc / 2, fc], btype="bandpass", fs=FS, output="sos")
     hp = butter(FILTER_ORDER, fc, btype="highpass", fs=FS, output="sos")
-    lp = butter(FILTER_ORDER, LIMIT_HZ, btype="lowpass", fs=FS, output="sos")
-    return bp, hp, lp
+    lp = butter(LP_ORDER, LIMIT_HZ, btype="lowpass", fs=FS, output="sos")
+    eq = high_shelf(SHELF_HZ, SHELF_DB)
+    eq[0, :3] *= 10 ** (GAIN_DB / 20)
+    return bp, hp, np.vstack([lp, eq])
 
 
 def quantise(sos_list):
@@ -87,17 +141,21 @@ def sat(v, w):
     return hi if v > hi else lo if v < lo else v
 
 
-def enhance_fixed(x24, coefs, enh_en=None):
+def enhance_fixed(x24, coefs, enh_en=None, ctl=None):
     """Bit-exact model of treble_fixed. x24: iterable of ints in s24 range.
-    enh_en: None (always 1) or a sequence of 0/1 per sample. Returns (out, enh) lists."""
+    coefs: N_TUNE * N_SECT rows (tuning 0 first). enh_en: None (always 1) or 0/1 per sample.
+    ctl: None (switches down) or per-sample ints, bit 0 = tuning (SW6), bit 1 = -12 dB (SW5).
+    Returns (out, enh) lists; enh is after the -12 dB shift."""
     st = [[0, 0, 0, 0] for _ in range(N_SECT)]      # x1, x2, y1, y2 per section
     half = 1 << (COEF_FRAC - 1)
     amax = (1 << (DATA_W - 1)) - 1
     out, enh_all = [], []
     for n, x in enumerate(x24):
+        c = 0 if ctl is None else int(ctl[n])
+        base = N_SECT * (c & 1)
         v = int(x) << DATA_FRAC
         for s in range(N_SECT):
-            b0, b1, b2, na1, na2 = coefs[s]
+            b0, b1, b2, na1, na2 = coefs[base + s]
             x1, x2, y1, y2 = st[s]
             acc = b0 * v + b1 * x1 + b2 * x2 + na1 * y1 + na2 * y2
             y = sat((acc + half) >> COEF_FRAC, DATA_W)
@@ -106,6 +164,8 @@ def enhance_fixed(x24, coefs, enh_en=None):
             if s == ABS_AFTER:
                 v = min(abs(v), amax)
         enh = (v + (1 << (DATA_FRAC - 1))) >> DATA_FRAC
+        if c & 2:
+            enh >>= ATT_SHIFT
         on = 1 if enh_en is None else enh_en[n]
         out.append(sat(int(x) + enh, OUT_W) if on else int(x))
         enh_all.append(enh)
@@ -149,39 +209,56 @@ def test_vectors(music24):
     return np.concatenate(parts)
 
 
+def control_pattern(n):
+    """Per-sample switch states for the test vectors (bit 0 SW6 tuning, bit 1 SW5 -12 dB).
+    test_vectors(): silence 0-255, impulses 256-2255, 5 kHz tone 2256-4255, 6 kHz square
+    4256-6255, music 6256-30255, silence. Every combination runs on music, tuning 1 also on the
+    full-scale square, and each change happens mid-signal (exercises the shared-state transient)."""
+    ctl = np.zeros(n, dtype=np.int64)
+    ctl[4256:10000] = 1          # tuning 1
+    ctl[10000:16000] = 3         # tuning 1, -12 dB
+    ctl[16000:24000] = 2         # tuning 0, -12 dB (tb_treble_fixed: enh_en = 0 in 22000..22999)
+    return ctl                   # 24000 onwards: both down
+
+
 def main():
     full = "--full" in sys.argv
-    sos_list = design_sos()
-    coefs = quantise(sos_list)
+    sos_sets = [design_sos(t) for t in range(N_TUNE)]
+    coefs = [row for sos in sos_sets for row in quantise(sos)]
 
     rom = os.path.join(ROOT, "rtl", "treble_coefs.mem")
     write_hex(rom, [c for row in coefs for c in row], COEF_W)
-    print(f"wrote {rom} ({N_SECT * 5} words, Q2.22)")
+    print(f"wrote {rom} ({N_TUNE * N_SECT * 5} words, Q2.22: tuning 0 then tuning 1)")
 
     music16 = decode_mp3(MP3)
     music24 = music16 << 8
     print(f"decoded {MP3}: {len(music16)} samples, {len(music16) / FS:.1f} s")
 
-    # Check 1: fixed vs float on the added treble (5 s, or the whole clip with --full).
+    # Check 1: fixed vs float on the added treble (5 s, or the whole clip with --full), per tuning.
     seg = music24 if full else music24[: 5 * FS]
-    out, enh = enhance_fixed(seg, coefs)
-    enh_f = enhance_float(seg.astype(np.float64), sos_list)
-    enh = np.array(enh, dtype=np.float64)
-    err = enh - enh_f
-    snr = 10 * np.log10(np.sum(enh_f ** 2) / np.sum(err ** 2))
-    print(f"check 1: treble power / (fixed - float) error power = {snr:.1f} dB "
-          f"(target > 60), max |err| = {np.max(np.abs(err)):.1f} LSB of s24")
-    clipped = int(np.sum(np.abs(seg + enh) > (1 << 23) - 1))
-    print(f"         clipped output samples: {clipped}")
+    for t in range(N_TUNE):
+        out, enh = enhance_fixed(seg, coefs, ctl=[t] * len(seg))
+        enh_f = enhance_float(seg.astype(np.float64), sos_sets[t])
+        enh = np.array(enh, dtype=np.float64)
+        err = enh - enh_f
+        snr = 10 * np.log10(np.sum(enh_f ** 2) / np.sum(err ** 2))
+        print(f"check 1: tuning {t}: treble power / (fixed - float) error power = {snr:.1f} dB "
+              f"(target > 60), max |err| = {np.max(np.abs(err)):.1f} LSB of s24")
+        clipped = int(np.sum(np.abs(seg + enh) > (1 << 23) - 1))
+        print(f"         clipped output samples: {clipped}")
+        if t == 0:
+            out0 = out
 
     # Check 2: enh_en = 0 passes the input through exactly.
     off, _ = enhance_fixed(seg[:4800], coefs, enh_en=[0] * 4800)
     assert off == [int(v) for v in seg[:4800]]
     print("check 2: enh_en = 0 -> output equals input: OK")
 
-    # Check 3: full-scale stimulus saturates without sign wrap.
+    # Check 3: full-scale stimulus saturates without sign wrap (with the switch pattern).
     vec_in = test_vectors(music24)
-    vec_out, _ = enhance_fixed(vec_in, coefs)
+    ctl = control_pattern(len(vec_in))
+    vec_out, _ = enhance_fixed(vec_in, coefs, ctl=ctl)
+    vec_def, _ = enhance_fixed(vec_in, coefs)
     lim = 1 << (OUT_W - 1)
     assert all(-lim <= v < lim for v in vec_out)
     pos = vec_in > 0
@@ -190,16 +267,25 @@ def main():
     print(f"check 3: full-scale stimulus: {nsat} saturated outputs, {wrapped} sign wraps: "
           f"{'OK' if wrapped == 0 else 'FAIL'}")
 
+    # Check 4: SW5 alone is exactly enh >> 2 (tuning 0, music part of the vectors).
+    _, e_full = enhance_fixed(vec_in[:12000], coefs)
+    _, e_att = enhance_fixed(vec_in[:12000], coefs, ctl=[2] * 12000)
+    assert e_att == [e >> ATT_SHIFT for e in e_full]
+    print("check 4: SW5 -> added treble is exactly enh >> 2: OK")
+
     vdir = os.path.join(ROOT, "sim", "vectors")
     write_hex(os.path.join(vdir, "treble_in.hex"), vec_in, OUT_W)
+    write_hex(os.path.join(vdir, "treble_ctl.hex"), ctl, 4)
     write_hex(os.path.join(vdir, "treble_out.hex"), vec_out, OUT_W)
-    print(f"wrote sim/vectors/treble_in.hex and treble_out.hex ({len(vec_in)} samples)")
+    write_hex(os.path.join(vdir, "treble_out_default.hex"), vec_def, OUT_W)
+    print(f"wrote sim/vectors/treble_in.hex, treble_ctl.hex, treble_out.hex, treble_out_default.hex "
+          f"({len(vec_in)} samples)")
 
     os.makedirs(os.path.join(ROOT, "build"), exist_ok=True)
     wav = os.path.join(ROOT, "build", "enhanced_fixed_32k.wav")
-    out16 = np.clip(np.array(out) >> 8, -32768, 32767).astype("<i2")
+    out16 = np.clip(np.array(out0) >> 8, -32768, 32767).astype("<i2")
     wavfile.write(wav, FS, out16)
-    print(f"wrote {wav} (listening copy)")
+    print(f"wrote {wav} (listening copy, tuning 0)")
 
 
 if __name__ == "__main__":

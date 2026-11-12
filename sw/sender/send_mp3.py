@@ -100,10 +100,10 @@ if __name__ == "__main__":
         ser.write(frame)
         ser.flush()
 
-        # Wait for reply
+        # Wait for reply (full songs take minutes to decode on the ARM) [Claude, 12 Nov]
         start_time = time.time()
         got_reply = False
-        while time.time() - start_time < 60:
+        while time.time() - start_time < 300:
             line = ser.readline()
             if line:
                 print(line.decode(errors="replace").rstrip())

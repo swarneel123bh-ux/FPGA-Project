@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-// treble_fixed: goal 2 stage 1, fixed-rule treble restoration for 32 kbit/s MP3 (fc = 7.2 kHz).
+// treble_fixed: goal 2 stage 1, fixed-rule treble restoration for 32 kbit/s MP3 (fc = 9 kHz since 12 Nov; was 7.2 kHz).
 //
 // WRITTEN BY CLAUDE (Swarneel's agent) on 11 Nov 2026, at Swarneel's request: Swarneel assigned
 // this RTL port to Claude while the team brings up ANC. The port list is Swarneel's (from the
@@ -7,8 +7,14 @@
 //
 // Bit-exact with model/goal2/ref_fixed.py (read its header for the number formats):
 //
-//   x -> band-pass fc/2..fc (sections 0-3) -> |.| -> high-pass fc (4-7) -> low-pass 20 kHz (8-11)
-//     -> enh;   music = enh_en ? sat24(x + enh) : x
+//   x -> band-pass fc/2..fc (sections 0-3) -> |.| -> high-pass fc (4-7) -> sections 8-11
+//     -> enh;   enh >>>= 2 if att12;   music = enh_en ? sat24(x + enh) : x
+//
+// [12 Nov] Two coefficient sets in the ROM (120 words), chosen per sample by tune_sel (SW6):
+//   0 = original tuning (fc 7.2 kHz, low-pass 20 kHz in 8-11, gain 1)
+//   1 = retune (fc 9 kHz, low-pass in 8-10, high-shelf EQ x -8 dB in 11)
+// att12 (SW5) shifts the added treble right by 2 (-12 dB). Both are synchronised like enh_en and
+// sampled at the start of each run. The two sets share one filter state (see ref_fixed.py).
 //
 // Each section is Direct Form I:  y = sat32((b0*x0 + b1*x1 + b2*x2 - a1*y1 - a2*y2 + 2^21) >>> 22)
 // Samples inside are 32 bits (s24 << 4: 4 guard bits above, 4 fraction bits below).
@@ -38,10 +44,13 @@ module treble_fixed #(
 	input wire sample_tick,									// one-cycle tick signal
 	input wire signed [23:0] music_raw,			// from music_fifo.v, valid START_DELAY clocks after the tick
 	output reg signed [23:0] music,					// to out_mux, held until the next result
-	input wire enh_en												// 1 = enhanced, 0 = plain (switch)
+	input wire enh_en,											// 1 = enhanced, 0 = plain (switch)
+	input wire tune_sel,										// [12 Nov] 0 = original tuning, 1 = retune (switch)
+	input wire att12												// [12 Nov] 1 = added treble -12 dB (switch)
 );
 
-localparam N_SECT    = 12;
+localparam N_SECT    = 12;							// sections per tuning
+localparam N_TUNE    = 2;
 localparam ABS_AFTER = 3;							// |.| on the output of section 3
 localparam DATA_W    = 32;
 localparam DATA_FRAC = 4;
@@ -55,7 +64,7 @@ localparam signed [DATA_W-1:0] D_MIN = {1'b1, {(DATA_W-1){1'b0}}};
 
 // ---------------------------------------------------------------- coefficient ROM
 (* rom_style = "distributed" *)
-reg signed [COEF_W-1:0] coef [0:N_SECT*5-1];
+reg signed [COEF_W-1:0] coef [0:N_TUNE*N_SECT*5-1];
 initial $readmemh(COEF_FILE, coef);
 
 // ---------------------------------------------------------------- filter state, per section
@@ -64,11 +73,16 @@ reg signed [DATA_W-1:0] x2 [0:N_SECT-1];
 reg signed [DATA_W-1:0] y1 [0:N_SECT-1];
 reg signed [DATA_W-1:0] y2 [0:N_SECT-1];
 
-// ---------------------------------------------------------------- enh_en synchroniser
+// ---------------------------------------------------------------- switch synchronisers
 reg enh_s1, enh_s2;
+reg tune_s1, tune_s2, att_s1, att_s2;
 always @(posedge clk) begin
-	enh_s1 <= enh_en;
-	enh_s2 <= enh_s1;
+	enh_s1  <= enh_en;
+	enh_s2  <= enh_s1;
+	tune_s1 <= tune_sel;
+	tune_s2 <= tune_s1;
+	att_s1  <= att12;
+	att_s2  <= att_s1;
 end
 
 // ---------------------------------------------------------------- start delay after the tick
@@ -90,7 +104,8 @@ localparam S_OUT   = 3'd5;							// final sum, saturate, write music
 reg [2:0] state;
 reg [3:0] sect;										// 0..11
 reg [2:0] tap;										// 0..4: b0 x0, b1 x1, b2 x2, -a1 y1, -a2 y2
-reg [5:0] cidx;										// coefficient address, sect*5 + tap
+reg [6:0] cidx;										// coefficient address, tune*60 + sect*5 + tap
+reg       att_l;										// att12, held for the whole run
 reg       drain;
 reg signed [23:0]       x_lat;				// the sample being processed
 reg signed [DATA_W-1:0] v_in;					// input of the current section
@@ -142,6 +157,7 @@ always @(posedge clk) begin
 		sect   <= 0;
 		tap    <= 0;
 		cidx   <= 0;
+		att_l  <= 0;
 		drain  <= 0;
 		x_lat  <= 0;
 		v_in   <= 0;
@@ -173,7 +189,8 @@ always @(posedge clk) begin
 					v_in  <= {{(DATA_W-DATA_FRAC-24){music_raw[23]}}, music_raw, {DATA_FRAC{1'b0}}};
 					sect  <= 0;
 					tap   <= 0;
-					cidx  <= 0;
+					cidx  <= tune_s2 ? N_SECT*5 : 0;	// tuning chosen once per sample
+					att_l <= att_s2;
 					acc   <= 0;
 					state <= S_ISSUE;
 				end
@@ -210,7 +227,7 @@ always @(posedge clk) begin
 				y2[sect] <= y1[sect];
 				y1[sect] <= y_r;
 				if (sect == N_SECT-1) begin
-					enh_r <= enh;
+					enh_r <= att_l ? (enh >>> 2) : enh;
 					state <= S_OUT;
 				end else begin
 					v_in  <= (sect == ABS_AFTER) ? y_abs : y_r;
