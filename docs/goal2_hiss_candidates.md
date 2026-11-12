@@ -47,4 +47,6 @@ named below. Listening results are Swarneel's blind tests unless marked otherwis
 Add harmonics only for the actual notes, found with the FFT: detect the notes in each frame, and add treble only
 at the harmonics of those notes (no treble between notes, so no baseline hiss). Harmonics are copied from the
 partial one octave below, which keeps them on the note's harmonic series.
-Status: in progress (`model/goal2/exp_note_harmonics.py`, when committed).
+Status: built as `model/goal2/exp_note_harmonics.py` (30 s clip). Detector: 95% of frames have at least one note
+(loose; between-note gaps are not silent), 2 notes in 36% of frames. Level-matched to the original in note frames
+(−1.8 dB). Blind pair 4 in `build/stairway_blind4/`. Result: pending Swarneel's listening.
