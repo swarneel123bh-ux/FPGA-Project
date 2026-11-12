@@ -49,6 +49,8 @@ named below. Listening results are Swarneel's blind tests unless marked otherwis
 
 | 13 | Note-only, source-strength floor 20 dB (add a harmonic only if its source partial is within 20 dB of the frame peak) | Blind pair 10 (`NOTE_SRC_DB=20`), commit `255a54a` | Rejected. Key: A = src20, B = loose. Swarneel: src20 has almost no hiss but sounds practically the same as the non-enhanced version; loose keeps the hiss | Same trade as the gates: it removes the hiss by removing the enhancement |
 
+| 14 | Note-only, decay law (harmonic level = fundamental × m^-1) instead of copying from the octave below | Blind pair 11 (`NOTE_LAW=decay`), commit `ababdfa` | Rejected. Key: A = decay law, B = loose. Swarneel: decay law has the hiss all through; loose has the hiss only at the strums; both sound like the enhanced version; loose preferred | The copy-from-the-octave-below level keeps the hiss confined to the strums |
+
 ## What the candidates show together
 
 - All persistence gates (5 and 3 frames) were rejected: they reduce the level of everything, so they trade quality for a small hiss reduction.
