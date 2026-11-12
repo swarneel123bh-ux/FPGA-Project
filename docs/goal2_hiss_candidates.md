@@ -45,6 +45,8 @@ named below. Listening results are Swarneel's blind tests unless marked otherwis
 
 | 11 | Note-only, persistence gate 3 frames (about 30 ms; notes in 29% of frames) | Blind pair 8 (`NOTE_PERSIST=3`), commit `e282467` | Rejected. Key: A = loose, B = persist-3. Swarneel prefers A: B sounds duller, hiss slightly weaker but so is everything else; crackle still there; strum hiss in both | Persistence gates trade treble for hiss and do not remove the strum hiss |
 
+| 12 | Note-only, synthesis window 4096 samples (instead of 2048) | Blind pair 9 (`NOTE_N=4096`), commit `aa925f3` | No audible difference from 2048; both have the strum hiss. Off-harmonic energy at strums is about 4 dB lower on paper, but not audible | Window length is not the lever. 8192 is much worse on paper |
+
 ## What the candidates show together
 
 - All persistence gates (5 and 3 frames) were rejected: they reduce the level of everything, so they trade quality for a small hiss reduction.
