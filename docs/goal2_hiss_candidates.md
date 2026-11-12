@@ -47,6 +47,8 @@ named below. Listening results are Swarneel's blind tests unless marked otherwis
 
 | 12 | Note-only, synthesis window 4096 samples (instead of 2048) | Blind pair 9 (`NOTE_N=4096`), commit `aa925f3` | No audible difference from 2048; both have the strum hiss. Off-harmonic energy at strums is about 4 dB lower on paper, but not audible | Window length is not the lever. 8192 is much worse on paper |
 
+| 13 | Note-only, source-strength floor 20 dB (add a harmonic only if its source partial is within 20 dB of the frame peak) | Blind pair 10 (`NOTE_SRC_DB=20`), commit `255a54a` | Rejected. Key: A = src20, B = loose. Swarneel: src20 has almost no hiss but sounds practically the same as the non-enhanced version; loose keeps the hiss | Same trade as the gates: it removes the hiss by removing the enhancement |
+
 ## What the candidates show together
 
 - All persistence gates (5 and 3 frames) were rejected: they reduce the level of everything, so they trade quality for a small hiss reduction.
