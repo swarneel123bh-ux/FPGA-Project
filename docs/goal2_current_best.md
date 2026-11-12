@@ -103,3 +103,21 @@ What is most likely to help next, from this:
    only above the cutoff, so the original is never altered.
 
 No code was written this turn.
+
+## Update: judging rule and the codec floor (13 Nov)
+
+- **Judging rule.** The enhancement is judged against the plain 32 kbit/s file's own noise floor, not against
+  silence. The plain file has a constant codec hiss (typical of 32 kbit/s), which is audible only in quiet parts.
+  Any hiss heard in the enhanced file should be compared with that floor.
+- **Passage 3 (6:40–7:10), one-note version.** With the strongest note per frame only (`NOTE_MAX=1`), the version is
+  much better than the original on this passage, per Swarneel's blind listening (pair 15). The continuous hiss of the
+  original is gone. A slight periodic hiss, synced with the strums, remains.
+- **Strum-synced hiss.** The added energy at strums is not higher than between strums (−0.4 dB at 7–10 kHz,
+  −2.5 dB at 10–20 kHz), so the strum-synced component is not extra added energy. The plain file has a small
+  strum-linked rise at 7–10 kHz (+1.5 dB) as well. Its cause is still open.
+- **Crossover.** The note harmonics are added only above the 7.2 kHz cutoff; leakage below it is −81 dB re FS, so
+  a crossover blend would change nothing (step 3 is already in place).
+
+**Current best, revised:** the note-harmonic version with at most one note per frame (`NOTE_MAX=1`), on top of the
+loose detector settings. It is preferred to the original on passages 2 and 3. On passage 1 (2:15) the earlier
+loose-version comparisons still stand, with the strum hiss open.
