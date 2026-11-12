@@ -19,9 +19,9 @@ N, H = 2048, 512
 BINW = FS / N
 ROOT = e.ROOT
 MAX_NOTES = 2
-MIN_PARTIALS = 4
+MIN_PARTIALS = int(os.environ.get('NOTE_MINP', 4))
 NHARM = 8                      # partials searched per note, below fc
-THR_DB = 25                    # partial must be within this many dB of the frame's peak in band
+THR_DB = float(os.environ.get('NOTE_THR', 25))                    # partial must be within this many dB of the frame's peak in band
 
 def f0_grid():
     return np.exp(np.arange(np.log(80.0), np.log(1000.0), np.log(1.002)))
@@ -141,11 +141,12 @@ def main():
     add_notes *= ratio
     print(f"gain to match original in note frames: {20*np.log10(ratio):.1f} dB")
     y_out = np.clip(np.round(p + add_notes), -32768, 32767).astype("<i2")
-    cand = os.path.join(ROOT, "test_audio/stairway/enhanced_notes_s135_30s.wav")
+    tag = os.environ.get("NOTE_TAG", "notes")
+    cand = os.path.join(ROOT, f"test_audio/stairway/enhanced_{tag}_s135_30s.wav")
     wavfile.write(cand, FS, y_out)
     orig = os.path.join(ROOT, "test_audio/stairway/enhanced_32k_s135_30s.wav")
     d = os.path.join(ROOT, "build/stairway_blind4"); os.makedirs(d, exist_ok=True)
-    pair = [("original", orig), ("notes", cand)]
+    pair = [("original", orig), (tag, cand)]
     random.SystemRandom().shuffle(pair)
     shutil.copy(pair[0][1], os.path.join(d, "A.wav")); shutil.copy(pair[1][1], os.path.join(d, "B.wav"))
     json.dump({"A": pair[0][0], "B": pair[1][0]}, open(os.path.join(d, "key_do_not_open_until_done.json"), "w"))
