@@ -279,3 +279,8 @@ Plain (no enhancement), 51 strum onsets, strum window minus between-strum level:
 So the plain file has a small strum-linked rise at 7–10 kHz, but the 10–20 kHz hiss in the one-note version
 (−71 dB) comes from the enhancement, not the source. The plain file was sent for listening: does the strum-synced
 hiss appear without the enhancement?
+
+Listening (13 Nov, Swarneel): the plain 32k file on passage 3 has a hiss too, the kind expected from a 32 kbit/s
+file, always present. The rest of the song is loud enough that it isn't noticed. So part of the hiss heard in B is
+the codec's own noise, not added by the enhancement. The added 10–20 kHz hiss is still the enhancement's
+contribution, measured above. Going forward, judge the enhancement against the plain file's own noise floor.
