@@ -245,3 +245,17 @@ N=2048 (current): 7.2–10 kHz −53.5, 10–20 kHz −61.8, on-harmonic share 4
 N=4096: −57.5, −66.2, 35%. N=8192: −33.5, −29.5, 17% (much worse). Release 0.7 at N=2048: −48.2, −56.0.
 Reading: N=4096 lowers the off-harmonic strum energy by about 4 dB, but that metric depends on mask width,
 which changes with N, and the on-harmonic share also falls. Blind pair 9 (N=2048 vs N=4096) tests it by ear.
+
+### Strum hiss on the second passage (13 Nov, loose note-only vs original)
+
+Added energy at strum onsets (150 ms after onset) against between strums, dB re FS, same method as before:
+
+| Passage | Variant | 7.2–10 kHz at strums | between | difference | 10–20 kHz difference |
+|---|---|---|---|---|---|
+| 1:00–1:30 | loose | −62.9 | −68.1 | +5.2 | +10.9 |
+| 1:00–1:30 | original | −73.1 | −76.5 | +3.4 | +3.5 |
+| 2:15–2:45 | loose | −58.0 | −71.9 | +14.0 | +8.3 |
+| 2:15–2:45 | original | −73.0 | −77.7 | +4.7 | +7.3 |
+
+Reading: the strum-linked added energy is present on the second passage too, with the same pattern, but about
+5 dB lower in absolute terms than on 2:15. Listening (pair 13) has not checked strum hiss yet.
