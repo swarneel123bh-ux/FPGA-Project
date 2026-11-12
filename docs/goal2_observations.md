@@ -181,3 +181,14 @@ gate, so it does not trade treble away in loud parts. It also reduces the added 
 10 dB. The distance is a proxy and the reference is itself a re-encode, so only the blind test decides.
 Candidate file: `test_audio/stairway/enhanced_rect3000_s135_30s.wav`; blind pair (original vs rect3000)
 in `build/stairway_blind2/`, key in `key_do_not_open_until_done.json`.
+
+### Blind pair 2 result (13 Nov, Swarneel): rectifier smoothing rejected
+
+Key: A = original, B = rect3000. Listening: A (original) overall better; B (3 kHz smoothing) worse
+and still has the hiss. The hiss is present in both. The rect3000 candidate is rejected.
+
+Lesson: the full-band LSD proxy improved by about 5 dB while the listening result got worse. The
+LSD proxy is not reliable for this decision; listening decides.
+
+Diagnostic file: `test_audio/stairway/added_only_original_s135_30s.wav`, the added treble alone (original
+chain), scaled to −6 dBFS peak so it can be heard. It is not a playback candidate.
