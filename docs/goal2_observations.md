@@ -210,3 +210,13 @@ is worse than the original (20.81 vs 19.92), and the proxy has already misled on
 
 Blind pair 3 (original vs copy-up): `build/stairway_blind3/`, key in `key_do_not_open_until_done.json`.
 Candidate file: `test_audio/stairway/enhanced_copyup_s135_30s.wav`.
+
+### Blind pair 3 result (13 Nov, Swarneel): octave copy-up rejected
+
+Key: A = original, B = copy-up. Listening: A (original) sounds better overall; the metallic jingle is
+still present in both. The copy-up candidate is rejected.
+
+Consequence: the jingle survives a harmonic-preserving method. So the rectifier's intermodulation is not
+the only cause. The source band is tonal (MP3 artifacts), and any method that builds treble from it copies
+that tonality up. The next experiment needs to limit what is copied from the tonal artifacts, not change
+the method. Still open.
