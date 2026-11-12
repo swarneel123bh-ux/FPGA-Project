@@ -347,3 +347,23 @@ Song length 483 s, UART 230,400 baud (23,040 bytes/s, 10 bits per byte), no prot
 Grading (passage 3, one listener): 56 kbit/s scored 10/10 against the original (not blind). 64 and 96 and 128 kbit/s
 also 10/10 in the blind set. 48 kbit/s scored 5.5. So 56 kbit/s is the lowest rate that matched the original here.
 The whole song at 56 kbit/s is 3.38 MB, about 2.4 minutes on the link.
+
+### Full grading set, passage 3 (13 Nov, Swarneel, one listener, original = 10)
+
+| Bitrate | Plain | Enhanced (note harmonics, one note, measured cutoff) | Enhancement effect | Whole-song size | Link time |
+|---|---|---|---|---|---|
+| 32 kbit/s | 4 | 4.9 | +0.9 | 1.93 MB | 1.4 min |
+| 48 kbit/s | 7 | 8 | +1.0 | 2.90 MB | 2.1 min |
+| 52 kbit/s | 8.5 | 8 | −0.5 | 3.14 MB | 2.3 min |
+| 56 kbit/s | 9.4 | 9.5 | +0.1 | 3.38 MB | 2.4 min |
+| 64 kbit/s | 10 | 9.5 | −0.5 | 3.86 MB | 2.8 min |
+| 96 kbit/s | 10 | 9.5 | −0.5 | 5.80 MB | 4.2 min |
+| 128 kbit/s | 10 | 10 | 0 | 7.73 MB | 5.6 min |
+
+Original (reference) 10. Swarneel's note: every score from 8 to just under 10 has the cymbals merging into one sound,
+which he attributes to the MP3 (the original WAV does not do this). The merging is present at 56 kbit/s and below,
+and absent at 64 kbit/s and above, in both plain and enhanced versions.
+
+Reading: enhancement helps most at 32 and 48 kbit/s (+0.9 and +1.0). It does not help at 52 and above (−0.5 to +0.1).
+Plain 64 kbit/s is the smallest file scoring 10. Enhanced 56 kbit/s is the smallest file scoring 9.5 or more, and
+is 0.48 MB smaller than plain 64. Single listener, single 30 s passage.
