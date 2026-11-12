@@ -91,6 +91,17 @@ def persist_filter(notes, grid, k):
         out.append(keep)
     return out
 
+SRC_DB = float(os.environ.get('NOTE_SRC_DB', 1e9))   # add a harmonic only if its source partial is within this many dB of the frame peak
+
+def src_ok(Z, t, fs):
+    if SRC_DB >= 1e8:
+        return True
+    k = int(round(fs / BINW))
+    lo, hi = int(80 / BINW), int(FC / BINW)
+    peak = 20 * np.log10(np.max(np.abs(Z[lo:hi, t])) + 1e-9)
+    return 20 * np.log10(np.abs(Z[k, t]) + 1e-9) >= peak - SRC_DB
+
+
 def synth(Z, notes):
     """Phase-vocoder synthesis of the added harmonics, mapping dst bins m*f0 from source n*f0."""
     K, T = Z.shape
@@ -120,7 +131,7 @@ def synth(Z, notes):
                 if fm > FC:
                     n = int(round(m / 2))
                     fs = n * f0
-                    if fs < FC:
+                    if fs < FC and src_ok(Z, t, fs):
                         sb = int(round(fs / BINW)); db = int(round(fm / BINW))
                         for d in (db - 1, db, db + 1):
                             if 0 < d < K:
