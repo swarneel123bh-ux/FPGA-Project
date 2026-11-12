@@ -284,3 +284,21 @@ Listening (13 Nov, Swarneel): the plain 32k file on passage 3 has a hiss too, th
 file, always present. The rest of the song is loud enough that it isn't noticed. So part of the hiss heard in B is
 the codec's own noise, not added by the enhancement. The added 10–20 kHz hiss is still the enhancement's
 contribution, measured above. Going forward, judge the enhancement against the plain file's own noise floor.
+
+### Bitrate set, passage 3 (13 Nov): can a better source be sent, and how does it score?
+
+Link budget at 230,400 baud (10 bits per byte, 23,040 bytes/s), full song of 483 s:
+- 32 kbit/s: 1.93 MB, 1.4 min, 5.8x headroom
+- 48 kbit/s: 2.90 MB, 2.1 min, 3.8x headroom
+- 64 kbit/s: 3.86 MB, 2.8 min, 2.9x headroom
+- 96 kbit/s: 5.80 MB, 4.2 min, 1.9x headroom
+- 128 kbit/s: 7.73 MB, 5.6 min, 1.4x headroom
+
+So 128 kbit/s fits the link (1.4x headroom) and is about 4x the 32 kbit/s file. The project plan treats 32 kbit/s
+as the target and 128 kbit/s as the ceiling reference, so sending 128 kbit/s changes the claim (it stops being
+an enhancement project).
+
+Blind scoring set (passage 3, 30 s, 6:40–7:10): 7 items numbered 1–7 in random order, key in
+`build/bitrate_set_p3/key_do_not_open_until_done.json` (not opened). Items: original (master, 10/10 reference),
+plain 32k, enhanced 32k (one-note), and 48, 64, 96, 128 kbit/s encodes. 30-second file sizes: 180 KB (48k),
+240 KB (64k), 361 KB (96k), 481 KB (128k).
