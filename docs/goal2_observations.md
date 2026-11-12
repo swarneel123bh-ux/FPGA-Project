@@ -333,3 +333,17 @@ Encoded from the same master at 56 kbit/s mono 48 kHz and sent for grading again
 master at about 19 dB there. So a 56k source already carries 7.2–15 kHz; an enhancement from it could only add
 roughly 15–20 kHz. The 32k-tuned method (fc 7.2 kHz) does not fit this case, so any 56k enhancement needs a
 different cutoff and is not built yet.
+
+### Whole-song sizes and link time (13 Nov)
+
+Song length 483 s, UART 230,400 baud (23,040 bytes/s, 10 bits per byte), no protocol overhead counted:
+- 32 kbit/s: 1.93 MB, 1.4 min, 5.8x headroom
+- 48 kbit/s: 2.90 MB, 2.1 min, 3.8x
+- 56 kbit/s: 3.38 MB, 2.4 min, 3.3x
+- 64 kbit/s: 3.86 MB, 2.8 min, 2.9x
+- 96 kbit/s: 5.80 MB, 4.2 min, 1.9x
+- 128 kbit/s: 7.73 MB, 5.6 min, 1.4x
+
+Grading (passage 3, one listener): 56 kbit/s scored 10/10 against the original (not blind). 64 and 96 and 128 kbit/s
+also 10/10 in the blind set. 48 kbit/s scored 5.5. So 56 kbit/s is the lowest rate that matched the original here.
+The whole song at 56 kbit/s is 3.38 MB, about 2.4 minutes on the link.
