@@ -116,7 +116,7 @@ def main():
     assert np.allclose(v0, ref.enhance(x, FC, GAIN), atol=1e-6)
 
     rows = [("V0 original (ref.enhance)", v0)]
-    for thr in (-70, -60, -50, -40):
+    for thr in (-70, -60, -50, -40, -30, -20, -10):
         g = gate_v1(band, thr)
         rows.append((f"V1 envelope gate, T={thr} dB (open rate {np.mean(g > 0.5):.0%})", x + GAIN * added * g))
     rows.append(("V2 Wiener gate on added treble", x + GAIN * wiener_v2(added)))

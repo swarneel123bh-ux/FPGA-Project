@@ -79,3 +79,31 @@ enhancement stays at the original parameters and the algorithm's own noise is re
   guitar strums) before any of this is judged for the hiss problem.
 - LSD and the gap metric are objective proxies, defined in `exp_hiss_gate.py`. They are not listening
   results; a blind test on strum material is the judge.
+
+### Synthetic strum set (12 Nov, `test_audio/strum_synth/`, 2 s, not team code)
+
+No strum recording is in the repo, and the Stairway clip is not in the repo either. So this set is
+made: four open-string strums of E minor (Karplus-Strong plucks, 12 ms string spacing, 0.5 s apart),
+encoded to 32k (plain) and 128k (reference). It tests the same event, a fast strum over ringing
+strings, not the song. Generator: `make_strum_clips.py`.
+
+| Variant | LSD above fc (dB) | Added energy in quietest 20% of frames (dB re FS) |
+|---|---|---|
+| Plain 32k | 37.30 | nothing added |
+| V0 original | 32.21 | −75.2 |
+| V1 gate, T = −40 dBFS (open 100%) | 32.20 | −75.2 |
+| V1 gate, T = −30 dBFS (open 83%) | 30.18 | −77.8 |
+| V1 gate, T = −20 dBFS (open 37%) | **23.63** | −106.7 |
+| V1 gate, T = −10 dBFS (open 0%) | 29.00 | nothing added |
+| V2 Wiener (offline floor) | 31.38 | −76.0 |
+
+**Reading (provisional):**
+- On the strum set the original adds far more energy than the 128k reference has in the quiet
+  frames, and a gate near −20 dBFS cuts it by about 31 dB and lowers LSD from 32.2 to 23.6 dB.
+  That is a much larger effect than on Beethoven, and it is the direction the hiss problem needs.
+- The result is very sensitive to the threshold: −30 dBFS gives 30.2 dB and −10 dBFS gives 29.0 dB.
+  A fixed dBFS threshold depends on the file's level. A usable version needs a threshold relative to
+  the signal's own level (or an adaptive one), and that is not yet tested.
+- LSD on 2 s of synthetic strums is a weak proxy. The 128k reference is not a true master, and the
+  quiet frames here are the ringing decay, not hiss. **Only a blind listening test on strum material
+  can say whether the gated version sounds better.**
