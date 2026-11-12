@@ -55,6 +55,8 @@ named below. Listening results are Swarneel's blind tests unless marked otherwis
 
 | 16 | Loose note-only vs original, second passage (60–90 s of the song) | Blind pair 13 (`NOTE_SRC=s60_30s`), commit `53365cb` | Loose preferred largely. Key: A = original, B = loose. Original has a continuous underlying hiss (like speakers maxed out); loose does not | Robustness check: the loose version holds on a second passage of the same song. Re-listen (A = original, B = loose): prefers B; the original has hiss on single guitar notes too (like the mic overloaded), B does not |
 
+| 17 | Loose note-only vs original, near the end of the song (6:40–7:10) | Blind pair 14 (`NOTE_SRC=s400_30s`) | Pending listening. Strum hiss on passage 2 (1:00) was not confirmed by ear; this is a third passage | Robustness check on a third passage |
+
 ## What the candidates show together
 
 - All persistence gates (5 and 3 frames) were rejected: they reduce the level of everything, so they trade quality for a small hiss reduction.
