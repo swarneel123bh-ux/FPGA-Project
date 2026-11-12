@@ -91,6 +91,8 @@ def persist_filter(notes, grid, k):
         out.append(keep)
     return out
 
+LAW = os.environ.get('NOTE_LAW', 'copy')   # 'copy': level from the partial an octave below; 'decay': level = fundamental * m^-P
+DECAY_P = float(os.environ.get('NOTE_DECAY_P', 1.0))
 SRC_DB = float(os.environ.get('NOTE_SRC_DB', 1e9))   # add a harmonic only if its source partial is within this many dB of the frame peak
 
 def src_ok(Z, t, fs):
@@ -137,7 +139,12 @@ def synth(Z, notes):
                             if 0 < d < K:
                                 s = sb if d == db else sb
                                 active[d] = True
-                                dst_amp[d] = max(dst_amp[d], np.abs(Z[sb, t]))
+                                if LAW == 'decay':
+                                    fund = int(round(f0 / BINW))
+                                    amp = np.abs(Z[fund, t]) * m ** (-DECAY_P)
+                                else:
+                                    amp = np.abs(Z[sb, t])
+                                dst_amp[d] = max(dst_amp[d], amp)
                                 ratio_src[d] = (s, m / n)
                 m += 1
         target = dst_amp * active
