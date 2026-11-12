@@ -269,3 +269,13 @@ Reading: the strum-linked added energy is present on the second passage too, wit
   extra added energy at strums.
 - Next checks: (1) listen to the plain 32k file on passage 3 for the same strum-synced hiss, to see whether it is
   in the source; (2) if plain is clean, check how the added harmonic level follows strum loudness.
+
+### Plain 32k on passage 3 (6:40–7:10): is the strum-synced hiss in the source? (13 Nov)
+
+Plain (no enhancement), 51 strum onsets, strum window minus between-strum level:
+- 7.2–10 kHz: +1.5 dB at strums (plain level −68 dB re FS).
+- 10–20 kHz: −0.1 dB (plain level −132 dB, effectively nothing up there).
+
+So the plain file has a small strum-linked rise at 7–10 kHz, but the 10–20 kHz hiss in the one-note version
+(−71 dB) comes from the enhancement, not the source. The plain file was sent for listening: does the strum-synced
+hiss appear without the enhancement?
