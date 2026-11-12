@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import exp_hiss_gate as e
 
 FS, FC = e.FS, e.FC
-N, H = 2048, 512
+N, H = int(os.environ.get('NOTE_N', 2048)), 512
 BINW = FS / N
 ROOT = e.ROOT
 MAX_NOTES = 2

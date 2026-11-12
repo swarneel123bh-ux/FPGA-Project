@@ -239,3 +239,9 @@ Strum windows = 150 ms after each detected strum onset (50 onsets, 30 s clip). A
 Working hypothesis: strum hiss = spectral splatter from fast amplitude/frequency change of the synthesised
 partials at attacks. Test next: a longer analysis window (or amplitude smoothing across frames) for the
 synthesis, and check whether the off-harmonic energy at strums falls. Not yet tested by ear.
+
+Window-length test on the note synthesis (same clip, same strum windows, off-harmonic energy at strums, dB re FS):
+N=2048 (current): 7.2–10 kHz −53.5, 10–20 kHz −61.8, on-harmonic share 48%.
+N=4096: −57.5, −66.2, 35%. N=8192: −33.5, −29.5, 17% (much worse). Release 0.7 at N=2048: −48.2, −56.0.
+Reading: N=4096 lowers the off-harmonic strum energy by about 4 dB, but that metric depends on mask width,
+which changes with N, and the on-harmonic share also falls. Blind pair 9 (N=2048 vs N=4096) tests it by ear.
