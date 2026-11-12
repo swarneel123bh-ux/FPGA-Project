@@ -192,3 +192,21 @@ LSD proxy is not reliable for this decision; listening decides.
 
 Diagnostic file: `test_audio/stairway/added_only_original_s135_30s.wav`, the added treble alone (original
 chain), scaled to −6 dBFS peak so it can be heard. It is not a playback candidate.
+
+### Hiss character and octave copy-up candidate (13 Nov, not team code)
+
+Listening to the added-only file (Swarneel): the hiss sounds like cicadas or tiny metallic jingles, louder
+in step with each strum, dying a little between strums, plus a continuous baseline hiss from 0:14 onward.
+
+Analysis (30 s clip): the 3.6–7.2 kHz source band is tonal (spectral flatness −22 dB during strums,
+−25 dB between) and the added 7.2–20 kHz treble is peaky (top-10 peaks 23–25 dB above the median). The
+rectifier turns the MP3's sparse tonal components into intermodulation products, which are inharmonic and
+sound metallic. The 3 kHz smoothing did not change that, which fits the blind result.
+
+Candidate (`model/goal2/exp_copyup.py`): octave copy-up by phase vocoder. The fc/2..fc band is shifted up by
+×2, so partials map to partials (harmonic). Same chain otherwise (high-pass fc, low-pass 20 kHz, gain 1, SW5/SW6
+down), level-matched to the rectifier chain (RMS equal). Three clipped samples in the 30 s file. The LSD proxy
+is worse than the original (20.81 vs 19.92), and the proxy has already misled once, so listening decides.
+
+Blind pair 3 (original vs copy-up): `build/stairway_blind3/`, key in `key_do_not_open_until_done.json`.
+Candidate file: `test_audio/stairway/enhanced_copyup_s135_30s.wav`.
