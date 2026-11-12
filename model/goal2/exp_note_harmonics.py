@@ -70,6 +70,27 @@ def detect(Mdb, idx, grid):
 
 DECAY = float(os.environ.get('NOTE_DECAY', 0.0))   # per-frame amplitude release (0 = off, no smoothing)
 
+PERSIST = int(os.environ.get('NOTE_PERSIST', 1))   # a note must be found in this many consecutive frames
+                                                    # (centred; offline, so it uses look-ahead)
+
+def persist_filter(notes, grid, k):
+    if k <= 1:
+        return notes
+    r = (k - 1) // 2
+    T = len(notes)
+    out = []
+    for t in range(T):
+        keep = []
+        for f0, bins in notes[t]:
+            cnt = 0
+            for u in range(max(0, t - r), min(T, t + r + 1)):
+                if any(abs(g0 / f0 - 1) < 0.01 for g0, _ in notes[u]):
+                    cnt += 1
+            if cnt >= k:
+                keep.append((f0, bins))
+        out.append(keep)
+    return out
+
 def synth(Z, notes):
     """Phase-vocoder synthesis of the added harmonics, mapping dst bins m*f0 from source n*f0."""
     K, T = Z.shape
@@ -130,7 +151,7 @@ def main():
     Mdb = 20 * np.log10(np.abs(Z) + 1e-9)
     grid = f0_grid()
     idx = sieve_tables(grid)
-    notes = detect(Mdb, idx, grid)
+    notes = persist_filter(detect(Mdb, idx, grid), grid, PERSIST)
     n_frames = len(notes)
     with_notes = sum(1 for nt in notes if nt)
     print(f"frames {n_frames}, frames with >=1 note {with_notes} ({100*with_notes/n_frames:.0f}%), "
