@@ -302,3 +302,25 @@ Blind scoring set (passage 3, 30 s, 6:40–7:10): 7 items numbered 1–7 in rand
 `build/bitrate_set_p3/key_do_not_open_until_done.json` (not opened). Items: original (master, 10/10 reference),
 plain 32k, enhanced 32k (one-note), and 48, 64, 96, 128 kbit/s encodes. 30-second file sizes: 180 KB (48k),
 240 KB (64k), 361 KB (96k), 481 KB (128k).
+
+### Blind grading, passage 3 (6:40–7:10), 13 Nov, Swarneel (one listener)
+
+Items were numbered 1–7 (key in `build/bitrate_set_p3/`). Scores, original = 10/10:
+
+| Item | Source | Score | Comment |
+|---|---|---|---|
+| 5 | original (master) | 10 | reference |
+| 1 | 96 kbit/s | 10 | no difference |
+| 3 | 64 kbit/s | 10 | no difference from original |
+| 7 | 128 kbit/s | 10 | no difference |
+| 4 | 48 kbit/s | 5.5 | worse than original, no hiss worth complaining about |
+| 6 | enhanced 32k (one-note) | 4 | audibly enhanced; drum cymbals blend into a metallic, cicada-like hiss |
+| 2 | plain 32k | 2 | audibly the 32k unenhanced version |
+
+Hiss note: the hiss Swarneel reported in this excerpt is the drums (cymbals blending together), not the codec floor.
+Reading: 64 kbit/s is indistinguishable from the original on this passage. 48 kbit/s is clearly worse. The enhanced
+32k version improves on plain 32k (4 vs 2) but is far from the reference. Single listener, single 30 s passage.
+
+Link limit: 230,400 baud gives 23,040 bytes/s, so 128 kbit/s (16,000 bytes/s) fits with 1.44x headroom. Not yet
+checked on the board (decoder at 128 kbit/s, feed rate and buffer). A 56 kbit/s source is not in this test; its
+quality is unknown until it is scored.
