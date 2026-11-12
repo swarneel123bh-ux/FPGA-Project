@@ -14,7 +14,8 @@ from scipy.signal import stft, istft
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import exp_hiss_gate as e
 
-FS, FC = e.FS, e.FC
+FS = e.FS
+FC = int(os.environ.get('NOTE_FC', e.FC))   # cutoff of the source bitrate (Hz); default 7.2 kHz (32 kbit/s)
 N, H = int(os.environ.get('NOTE_N', 2048)), 512
 BINW = FS / N
 ROOT = e.ROOT
@@ -174,7 +175,7 @@ def synth(Z, notes):
 
 def main():
     SRC = os.environ.get("NOTE_SRC", "s135_30s")
-    p = e.decode(os.path.join(ROOT, f"test_audio/stairway/plain_32k_{SRC}.mp3"))
+    p = e.decode(os.environ.get("NOTE_PLAIN") or os.path.join(ROOT, f"test_audio/stairway/plain_32k_{SRC}.mp3"))
     f, t, Z = stft(p, fs=FS, nperseg=N, noverlap=N - H, boundary=None, padded=False)
     Mdb = 20 * np.log10(np.abs(Z) + 1e-9)
     grid = f0_grid()
@@ -191,7 +192,8 @@ def main():
     add_notes = np.zeros(len(p)); m_ = min(len(p), len(y)); add_notes[:m_] = y[:m_]
     add_notes = e.ref.lowpass(e.ref.highpass(add_notes, FC), e.ref.LIMIT_HZ)
     # level: match added energy in note frames to the original's added energy in the same frames
-    band, added = e.source_band_and_added(p)
+    band = e.ref.bandpass_octave(p, FC)
+    added = e.ref.lowpass(e.ref.highpass(np.abs(band), FC), e.ref.LIMIT_HZ)
     _, _, Oz = stft(added, fs=FS, nperseg=N, noverlap=N - H, boundary=None, padded=False)
     _, _, Nz = stft(add_notes, fs=FS, nperseg=N, noverlap=N - H, boundary=None, padded=False)
     mask = np.array([len(nt) > 0 for nt in notes[: Nz.shape[1]]])
