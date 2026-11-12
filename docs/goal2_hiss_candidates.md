@@ -55,7 +55,7 @@ named below. Listening results are Swarneel's blind tests unless marked otherwis
 
 | 16 | Loose note-only vs original, second passage (60–90 s of the song) | Blind pair 13 (`NOTE_SRC=s60_30s`), commit `53365cb` | Loose preferred largely. Key: A = original, B = loose. Original has a continuous underlying hiss (like speakers maxed out); loose does not | Robustness check: the loose version holds on a second passage of the same song. Re-listen (A = original, B = loose): prefers B; the original has hiss on single guitar notes too (like the mic overloaded), B does not |
 
-| 17 | Loose note-only vs original, near the end of the song (6:40–7:10) | Blind pair 14 (`NOTE_SRC=s400_30s`), key A = original, B = loose | Swarneel: A (original) has a periodic hiss; B (loose) has a weird continuous hiss. No preference stated yet | New problem: on this passage the loose version has a continuous hiss that the original does not have in the same form. Not yet resolved. Write-up on hold |
+| 17 | Loose note-only vs original, near the end of the song (6:40–7:10) | Blind pair 14 (`NOTE_SRC=s400_30s`), key A = original, B = loose | Swarneel: A (original) has a periodic hiss; B (loose) has a weird continuous hiss. Swarneel: neither is acceptable; B sounds too noisy, like an old FM radio, so A (original) is preferred | New problem: on this passage the loose version has a continuous hiss that the original does not have in the same form. Not yet resolved. Write-up on hold |
 
 ## What the candidates show together
 
