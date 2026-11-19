@@ -1,0 +1,11 @@
+WNS (setup) = 2.921 ns
+WHS (hold)  = 0.043 ns
+| Slice LUTs                 | 1679 |     0 |     53200 |  3.16 |
+| Slice Registers            | 2588 |     0 |    106400 |  2.43 |
+| Block RAM Tile    |    3 |     0 |       140 |  2.14 |
+| DSPs           |    2 |     0 |       220 |  0.91 |
+| Bonded IOB                  |   25 |    25 |       200 |  12.50 |
+| Total On-Chip Power (W)  | 1.821        |
+| Dynamic (W)              | 1.673        |
+| Device Static (W)        | 0.148        |
+| Junction Temperature (C) | 46.0         |

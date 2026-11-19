@@ -1,0 +1,37 @@
+check 1/2: 30756 samples, 0 mismatches (enh_en = 0 for samples 22000..22999), 1373 at full scale
+check 4:   reset + replay of 3000 samples: 0 mismatches
+check 6:   300 samples at 2,083-clock spacing: 0 mismatches
+check 5:   longest tick-to-result 112 clocks (limit 140), 0 changes outside the run
+PASS: 34056 checks, bit-exact with model/goal2/ref_fixed.py
+sim/tb_treble_fixed.v:174: $finish called at 60258895000 (1ps)
+---ENH
+check 5: SW6 -> tune_sel 1, SW5 -> att12 1 (expect 1 1)
+PASS
+sim/tb_enh_core.v:231: $finish called at 316825465000 (1ps)
+---STREAM
+stairway_full_32k.mp3                    230400 baud   32 kbit/s  482.9 s song | first audio   0.73 s (was   93.3 s) | rx done   83.9 s | underruns 0 overflows 0 | pcm same res same | PASS
+stairway_full_32k.mp3                    115200 baud   32 kbit/s  482.9 s song | first audio   1.47 s (was  177.2 s) | rx done  167.8 s | underruns 0 overflows 0 | pcm same res same | PASS
+beethoven5_ogg_32k.mp3                   230400 baud   32 kbit/s   20.1 s song | first audio   0.73 s (was    3.9 s) | rx done    3.6 s | underruns 0 overflows 0 | pcm same res same | PASS
+beethoven5_ogg_32k.mp3                   115200 baud   32 kbit/s   20.1 s song | first audio   1.47 s (was    7.4 s) | rx done    7.1 s | underruns 0 overflows 0 | pcm same res same | PASS
+synthetic_32k.mp3                        230400 baud   32 kbit/s   20.1 s song | first audio   0.73 s (was    3.9 s) | rx done    3.6 s | underruns 0 overflows 0 | pcm same res same | PASS
+synthetic_32k.mp3                        115200 baud   32 kbit/s   20.1 s song | first audio   1.47 s (was    7.4 s) | rx done    7.1 s | underruns 0 overflows 0 | pcm same res same | PASS
+excerpt_01_32k.mp3                       230400 baud   32 kbit/s   20.1 s song | first audio   0.73 s (was    3.9 s) | rx done    3.6 s | underruns 0 overflows 0 | pcm same res same | PASS
+excerpt_01_32k.mp3                       115200 baud   32 kbit/s   20.1 s song | first audio   1.47 s (was    7.4 s) | rx done    7.1 s | underruns 0 overflows 0 | pcm same res same | PASS
+beethoven5_ogg_128k.mp3                  230400 baud  128 kbit/s   20.1 s song | first audio   0.78 s (was   14.3 s) | rx done   14.0 s | underruns 0 overflows 0 | pcm same res same | PASS
+beethoven5_ogg_128k.mp3                  115200 baud  128 kbit/s   20.1 s song | first audio  13.24 s (was   28.3 s) | rx done   27.9 s | underruns 0 overflows 0 | pcm same res same | PASS
+beethoven5_20s_48k_mono_128k.mp3          57600 baud  128 kbit/s   20.1 s song | first audio  42.53 s (was   56.1 s) | rx done   55.8 s | underruns 0 overflows 0 | pcm same res same | PASS
+negative control (wrong baud) detected underruns: PASS
+ALL PASS
+---UNITS
+[tb_music_fifo]
+PASS: 2169 cycles checked, 0 errors
+[tb_music_fifo_axi]
+PASS: 4124 checks, 0 errors
+[tb_codec_cfg]
+PASS: codec_cfg emitted all 26 expected I2C transactions.
+[tb_i2s_rx]
+PASS: i2s_rx captured two signed stereo I2S frames.
+[tb_i2s_tx]
+PASS: i2s_tx serialized the stereo sample pair.
+[tb_i2s_tx_skew]
+PASS: i2s_tx correct for LRCLK skew -60..+60 ns, 200 drifting frames each

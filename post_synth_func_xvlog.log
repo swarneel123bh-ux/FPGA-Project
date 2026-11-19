@@ -1,0 +1,6 @@
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/swarneel/fpga_submission/build/postsim/treble_fixed_postsynth.v" into library post_synth_func
+INFO: [VRFC 10-311] analyzing module treble_fixed
+INFO: [VRFC 10-311] analyzing module glbl
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/swarneel/fpga_submission/build/postsim/tb_treble_fixed_post.v" into library post_synth_func
+INFO: [VRFC 10-311] analyzing module tb_treble_fixed
+INFO: [VRFC 10-2263] Analyzing Verilog file "/home/swarneel/Xilinx/Vivado/2020.2/data/verilog/src/glbl.v" into library post_synth_func

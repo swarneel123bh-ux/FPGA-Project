@@ -1,0 +1,134 @@
+
+****** Vivado v2020.2 (64-bit)
+  **** SW Build 3064766 on Wed Nov 18 09:12:47 MST 2020
+  **** IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+    ** Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+
+source scripts/reports_enh.tcl
+# set root [file normalize [pwd]]
+# set out  $root/build/enh/reports
+# file mkdir $out
+# open_project $root/build/enh/proj/enh.xpr
+Scanning sources...
+Finished scanning sources
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/home/swarneel/Xilinx/Vivado/2020.2/data/ip'.
+# open_run synth_1 -name synth_1
+Design is defaulting to impl run constrset: constrs_1
+Design is defaulting to synth run part: xc7z020clg484-1
+INFO: [Device 21-403] Loading part xc7z020clg484-1
+INFO: [Project 1-454] Reading design checkpoint '/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/ip/clk_wiz_0/clk_wiz_0.dcp' for cell 'u_clk'
+INFO: [Project 1-454] Reading design checkpoint '/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/bd/enh_ps/ip/enh_ps_processing_system7_0_0/enh_ps_processing_system7_0_0.dcp' for cell 'u_ps/enh_ps_i/processing_system7_0'
+INFO: [Project 1-454] Reading design checkpoint '/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/bd/enh_ps/ip/enh_ps_rst_aclk_0/enh_ps_rst_aclk_0.dcp' for cell 'u_ps/enh_ps_i/rst_aclk'
+INFO: [Project 1-454] Reading design checkpoint '/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/bd/enh_ps/ip/enh_ps_auto_pc_0/enh_ps_auto_pc_0.dcp' for cell 'u_ps/enh_ps_i/axi_ic/s00_couplers/auto_pc'
+Netlist sorting complete. Time (s): cpu = 00:00:00.03 ; elapsed = 00:00:00.02 . Memory (MB): peak = 2311.746 ; gain = 0.000 ; free physical = 3452 ; free virtual = 7090
+INFO: [Netlist 29-17] Analyzing 151 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-479] Netlist was created with Vivado 2020.2
+INFO: [Project 1-570] Preparing netlist for logic optimization
+WARNING: [Opt 31-35] Removing redundant IBUF, u_clk/inst/clkin1_ibufg, from the path connected to top-level port: clk100 
+Resolution: The tool has removed redundant IBUF. To resolve this warning, check for redundant IBUF in the input design.
+WARNING: [Constraints 18-550] Could not create 'IBUF_LOW_PWR' constraint because net 'u_clk/clk_in1' is not directly connected to top level port. Synthesis is ignored for IBUF_LOW_PWR but preserved for implementation.
+Parsing XDC File [/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/bd/enh_ps/ip/enh_ps_processing_system7_0_0/enh_ps_processing_system7_0_0.xdc] for cell 'u_ps/enh_ps_i/processing_system7_0/inst'
+Finished Parsing XDC File [/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/bd/enh_ps/ip/enh_ps_processing_system7_0_0/enh_ps_processing_system7_0_0.xdc] for cell 'u_ps/enh_ps_i/processing_system7_0/inst'
+Parsing XDC File [/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/bd/enh_ps/ip/enh_ps_rst_aclk_0/enh_ps_rst_aclk_0_board.xdc] for cell 'u_ps/enh_ps_i/rst_aclk/U0'
+Finished Parsing XDC File [/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/bd/enh_ps/ip/enh_ps_rst_aclk_0/enh_ps_rst_aclk_0_board.xdc] for cell 'u_ps/enh_ps_i/rst_aclk/U0'
+Parsing XDC File [/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/bd/enh_ps/ip/enh_ps_rst_aclk_0/enh_ps_rst_aclk_0.xdc] for cell 'u_ps/enh_ps_i/rst_aclk/U0'
+Finished Parsing XDC File [/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/bd/enh_ps/ip/enh_ps_rst_aclk_0/enh_ps_rst_aclk_0.xdc] for cell 'u_ps/enh_ps_i/rst_aclk/U0'
+Parsing XDC File [/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_board.xdc] for cell 'u_clk/inst'
+Finished Parsing XDC File [/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/ip/clk_wiz_0/clk_wiz_0_board.xdc] for cell 'u_clk/inst'
+Parsing XDC File [/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/ip/clk_wiz_0/clk_wiz_0.xdc] for cell 'u_clk/inst'
+INFO: [Timing 38-35] Done setting XDC timing constraints. [/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/ip/clk_wiz_0/clk_wiz_0.xdc:57]
+INFO: [Timing 38-2] Deriving generated clocks [/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/ip/clk_wiz_0/clk_wiz_0.xdc:57]
+Finished Parsing XDC File [/home/swarneel/fpga_submission/build/enh/proj/enh.gen/sources_1/ip/clk_wiz_0/clk_wiz_0.xdc] for cell 'u_clk/inst'
+Parsing XDC File [/home/swarneel/fpga_submission/constraints/zedboard_enh.xdc]
+Finished Parsing XDC File [/home/swarneel/fpga_submission/constraints/zedboard_enh.xdc]
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2642.586 ; gain = 0.000 ; free physical = 2881 ; free virtual = 6621
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 1 instances were transformed.
+  IOBUF => IOBUF (IBUF, OBUFT): 1 instance 
+
+open_run: Time (s): cpu = 00:00:13 ; elapsed = 00:00:14 . Memory (MB): peak = 2642.586 ; gain = 330.938 ; free physical = 2881 ; free virtual = 6621
+# report_utilization -file $out/util_synth.rpt
+# close_design
+# open_run impl_1
+Netlist sorting complete. Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.03 . Memory (MB): peak = 2642.586 ; gain = 0.000 ; free physical = 2947 ; free virtual = 6718
+INFO: [Netlist 29-17] Analyzing 139 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-479] Netlist was created with Vivado 2020.2
+INFO: [Project 1-570] Preparing netlist for logic optimization
+WARNING: [Constraints 18-550] Could not create 'IBUF_LOW_PWR' constraint because net 'u_clk/clk_in1' is not directly connected to top level port. Synthesis is ignored for IBUF_LOW_PWR but preserved for implementation.
+INFO: [Timing 38-478] Restoring timing data from binary archive.
+INFO: [Timing 38-479] Binary timing data restore complete.
+INFO: [Project 1-856] Restoring constraints from binary archive.
+INFO: [Project 1-853] Binary constraint restore complete.
+Reading XDEF placement.
+Reading placer database...
+Reading XDEF routing.
+Read XDEF File: Time (s): cpu = 00:00:00.24 ; elapsed = 00:00:00.24 . Memory (MB): peak = 2642.586 ; gain = 0.000 ; free physical = 2869 ; free virtual = 6641
+Restored from archive | CPU: 0.250000 secs | Memory: 5.393478 MB |
+Finished XDEF File Restore: Time (s): cpu = 00:00:00.24 ; elapsed = 00:00:00.24 . Memory (MB): peak = 2642.586 ; gain = 0.000 ; free physical = 2869 ; free virtual = 6641
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2642.586 ; gain = 0.000 ; free physical = 2869 ; free virtual = 6641
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 1 instances were transformed.
+  IOBUF => IOBUF (IBUF, OBUFT): 1 instance 
+
+# report_utilization                 -file $out/util_impl.rpt
+# report_utilization -hierarchical   -file $out/util_impl_hier.rpt
+# report_timing_summary -max_paths 10 -file $out/timing_impl.rpt
+INFO: [Timing 38-91] UpdateTimingParams: Speed grade: -1, Delay Type: min_max.
+INFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs
+# report_clocks                      -file $out/clocks.rpt
+# report_power                       -file $out/power_impl.rpt
+Command: report_power -file /home/swarneel/fpga_submission/build/enh/reports/power_impl.rpt
+Running Vector-less Activity Propagation...
+
+Finished Running Vector-less Activity Propagation
+0 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.
+report_power completed successfully
+# report_drc                         -file $out/drc_impl.rpt
+Command: report_drc -file /home/swarneel/fpga_submission/build/enh/reports/drc_impl.rpt
+INFO: [IP_Flow 19-1839] IP Catalog is up to date.
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Coretcl 2-168] The results of DRC are in file /home/swarneel/fpga_submission/build/enh/reports/drc_impl.rpt.
+report_drc completed successfully
+# set wns  [get_property SLACK [get_timing_paths -max_paths 1 -nworst 1 -setup]]
+# set whs  [get_property SLACK [get_timing_paths -max_paths 1 -nworst 1 -hold]]
+# set f [open $out/summary.txt w]
+# puts $f "WNS (setup) = $wns ns"
+# puts $f "WHS (hold)  = $whs ns"
+# foreach t {"Slice LUTs" "Slice Registers" "Block RAM Tile" "DSPs" "Bonded IOB"} {
+# 	set fu [open $out/util_impl.rpt r]
+# 	while {[gets $fu line] >= 0} {
+# 		if {[string match "| $t*" $line]} { puts $f [string trim $line]; break }
+# 	}
+# 	close $fu
+# }
+# set fp [open $out/power_impl.rpt r]
+# while {[gets $fp line] >= 0} {
+# 	if {[regexp {^\| (Total On-Chip Power|Dynamic|Device Static|Junction Temperature)} $line]} {
+# 		puts $f [string trim $line]
+# 	}
+# }
+# close $fp
+# close $f
+# puts "================ build/enh/reports/summary.txt ================"
+================ build/enh/reports/summary.txt ================
+# set f [open $out/summary.txt r];
+# puts [read $f];
+WNS (setup) = 2.921 ns
+WHS (hold)  = 0.043 ns
+| Slice LUTs                 | 1679 |     0 |     53200 |  3.16 |
+| Slice Registers            | 2588 |     0 |    106400 |  2.43 |
+| Block RAM Tile    |    3 |     0 |       140 |  2.14 |
+| DSPs           |    2 |     0 |       220 |  0.91 |
+| Bonded IOB                  |   25 |    25 |       200 |  12.50 |
+| Total On-Chip Power (W)  | 1.821        |
+| Dynamic (W)              | 1.673        |
+| Device Static (W)        | 0.148        |
+| Junction Temperature (C) | 46.0         |
+
+# close $f
+INFO: [Common 17-206] Exiting Vivado at Thu Nov 19 18:28:25 2026...

@@ -1,0 +1,21 @@
+
+****** xsim v2020.2 (64-bit)
+  **** SW Build 3064766 on Wed Nov 18 09:12:47 MST 2020
+  **** IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+    ** Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+
+source xsim.dir/post_route_func_snap/xsim_script.tcl
+# xsim {post_route_func_snap} -autoloadwcfg -runall
+Vivado Simulator 2020.2
+Time resolution is 1 ps
+run -all
+tb_treble_fixed: 30756 vectors
+check 1/2: 30756 samples, 0 mismatches (enh_en = 0 for samples 22000..22999), 1373 at full scale
+check 4:   reset + replay of 3000 samples: 0 mismatches
+check 6:   300 samples at 2,083-clock spacing: 0 mismatches
+check 5:   longest tick-to-result 112 clocks (limit 140), 0 changes outside the run
+PASS: 34056 checks, bit-exact with model/goal2/ref_fixed.py
+$finish called at time : 60259475 ns : File "/home/swarneel/fpga_submission/build/postsim/tb_treble_fixed_post.v" Line 180
+run: Time (s): cpu = 00:00:00.90 ; elapsed = 00:25:21 . Memory (MB): peak = 2401.375 ; gain = 0.000 ; free physical = 1987 ; free virtual = 6384
+exit
+INFO: [Common 17-206] Exiting xsim at Thu Nov 19 19:28:13 2026...
