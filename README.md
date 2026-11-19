@@ -28,7 +28,7 @@ rtl/          PL Verilog: enh_top, enh_core, treble_fixed (+ treble_coefs.mem), 
 constraints/  zedboard_enh.xdc
 scripts/      build_enh.tcl (+ enh_bd.tcl), build_enh_sw.tcl, run_enh_jtag.tcl,
               reports_enh.tcl, postsynth_sim_treble.tcl
-sim/          testbenches, vectors (treble_*.hex), run_treble.sh, run_enh.sh, run_stream.sh,
+sim/          testbenches, vectors (treble_*.hex), run_all.sh, run_treble.sh, run_enh.sh, run_stream.sh,
               stream_sim.c
 sw/app/       bare-metal ARM application (UART receive, MP3 decode, AXI feed, streaming play)
 sw/sender/    PC sender (send_mp3.py)
@@ -66,20 +66,12 @@ without reprogramming the FPGA. Options:
 ## Simulation (Icarus Verilog, committed vectors)
 
 ```bash
-mkdir -p sim/build
-iverilog -g2012 -o sim/build/tb_treble_fixed rtl/treble_fixed.v sim/tb_treble_fixed.v && vvp -n sim/build/tb_treble_fixed | tail -6
-bash sim/run_enh.sh | tail -3
-bash sim/run_stream.sh | tail -12
-for t in "tb_music_fifo rtl/music_fifo.v" "tb_music_fifo_axi rtl/music_fifo.v rtl/music_fifo_axi.v" \
-         "tb_codec_cfg rtl/codec_cfg.v rtl/adau_i2c_write.v" "tb_i2s_rx rtl/i2s_rx.v" \
-         "tb_i2s_tx rtl/i2s_tx.v" "tb_i2s_tx_skew rtl/i2s_tx.v"; do
-  set -- $t; n=$1; shift
-  iverilog -g2012 -o sim/build/$n "$@" sim/$n.v && vvp -n sim/build/$n | grep -E "PASS|FAIL"
-done
+bash sim/run_all.sh        # all testbenches, committed vectors; ends with ALL PASS
+bash sim/run_stream.sh     # streaming playback timing on the PC; needs the test MP3s in test_audio/
 ```
 
 `sim/run_treble.sh` regenerates the vectors and `rtl/treble_coefs.mem` from
-`model/goal2/ref_fixed.py` (needs numpy/scipy); the commands above use the committed vectors.
+`model/goal2/ref_fixed.py` (needs numpy/scipy); `sim/run_all.sh` uses the committed vectors.
 
 PC build of the ARM decoder (prints the MP3 FNV-1a and the PCM checksum):
 
