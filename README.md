@@ -33,6 +33,7 @@ sim/          testbenches, vectors (treble_*.hex), run_treble.sh, run_enh.sh, ru
 sw/app/       bare-metal ARM application (UART receive, MP3 decode, AXI feed, streaming play)
 sw/sender/    PC sender (send_mp3.py)
 model/goal2/  Python reference models; ref_fixed.py generates the bit-exact test vectors
+screenshots/  Vivado 2020.2 screenshots and simulation results (see screenshots/README.md)
 demo.sh       one-command demo
 ```
 
