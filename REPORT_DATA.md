@@ -1,8 +1,8 @@
 # Report data: 19 Nov 2026 runs on Ubuntu, Vivado/Vitis 2020.2
 
 Written by Claude (Swarneel's agent), 19 Nov 2026. Every number below is copied from the file named
-next to it (all files are in this folder). Source tree: branch `submission`, commit `2fc805c`
-(RTL identical to `39d2a76` on `d/goal2`).
+next to it (all files are in this folder). Source tree: branch `submission`, commit `2fc805c` (RTL identical to `39d2a76` on `d/goal2`);
+screenshots added to that branch in `8d8eccf` (`screenshots/`).
 
 ## Tools
 
@@ -118,9 +118,18 @@ res.checksum = 0x27133182
 `xsct scripts/build_enh_sw.tcl`: `SW_DONE .../build/enh/enh_app.elf .../build/enh/BOOT.BIN`
 (enh_app.elf 270,332 bytes).
 
+## Screenshots (screenshots/ here and on the submission branch)
+
+Captured from the Vivado 2020.2 GUI on 19 Nov 2026 (project `build/enh/proj/enh.xpr`):
+01a project summary + Design Runs table, 01b Sources hierarchy (expanded), 02 block design `enh_ps`
+(+ 02b SVG export), 03 Address Editor (M_AXI 0x43C0_0000, 64K), 04 device view, 05a utilization per
+module, 05b utilization summary, 06 Design Timing Summary, 07 power summary.
+08 (post-synthesis/post-route sim results) and 09 (Icarus PASS lines) are the log text rendered as
+images, not screen captures. See screenshots/README.md.
+
 ## Not done
 
-- Screenshots: no screen-capture tool was available in this session. Take them by hand from
-  `vivado build/enh/proj/enh.xpr`.
-- Board test of demo.sh: no ZedBoard was connected when this was written (no USB-UART device).
-  `bash -n demo.sh` passes.
+- Optional waveform screenshot of `treble_fixed` (GTKWave/xsim): not made.
+- Optional post-route SDF timing simulation: not run.
+- Board test of demo.sh: skipped at Swarneel's decision on 19 Nov (no ZedBoard connected).
+  `bash -n demo.sh` passes; demo.sh has only been dry-run on the Mac with stubbed tools.
